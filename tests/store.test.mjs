@@ -39,10 +39,15 @@ test('identity: name, slug, bundle id, version, build, owner, home screen name',
   assert.equal(app.userInterfaceStyle, 'light');
 });
 
-test('values from Cowork: the RevenueCat key and App Store Connect id are in; only the Expo project id is still a marked placeholder', () => {
+test('values from Cowork: the RevenueCat key, the App Store Connect id and the Expo project id are in, and no placeholder is left anywhere', () => {
   assert.match(app.extra.revenueCatApiKeyIos, /^appl_[A-Za-z0-9]+$/);
   assert.equal(eas.submit.production.ios.ascAppId, '6838074080');
-  assert.equal(app.extra.eas.projectId, 'COWORK_PLACEHOLDER_EXPO_PROJECT_ID');
+  assert.equal(app.extra.eas.projectId, 'ad880069-1f10-49d0-bcf5-b05c86bbe8e3');
+  assert.equal(app.owner, 'bkdeveloper123');
+  assert.equal(app.slug, 'timestampcamera');
+  const token = ['COWORK', 'PLACEHOLDER'].join('_');
+  const files = ['app.json', 'eas.json', 'App.tsx', 'index.ts', 'CLAUDE.md', 'README.md', 'store/metadata.md', ...walk('src', ['.ts', '.tsx']), ...walk('docs', ['.html', '.md', '.xml', '.txt']), ...walk('tests', ['.mjs'])];
+  for (const f of files) assert.ok(!read(f).includes(token), `placeholder left in ${f}`);
   assert.equal(eas.cli.appVersionSource, 'local');
   assert.equal(eas.build.production.autoIncrement, false);
 });

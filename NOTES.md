@@ -2,6 +2,8 @@
 
 Newest first. One entry per commit: date, version/build, what changed and why, and how it was checked.
 
+- 2026-11-22: 1.0.0 build 1, the last value from Cowork: app.json `extra.eas.projectId` is ad880069-1f10-49d0-bcf5-b05c86bbe8e3 (Expo project bkdeveloper123/timestampcamera); owner bkdeveloper123 and slug timestampcamera already matched. No placeholder is left anywhere; the store test now checks the id, owner and slug and fails if a placeholder appears in the app, config, docs, store or test files. CLAUDE.md updated. Checked: `npx tsc --noEmit` clean, `npm test` passing, `npx expo config --type introspect` shows the project id, owner and slug.
+
 - 2026-11-22: 1.0.0 build 1, the app icon: A3 yellow (Brian's pick).
   - A photo with a bright yellow tag across its bottom holding a dark clock, a dark pin and two dark lines, on the dark chrome tile. Named in store/icon.js (`CHOSEN = 'A3-yellow'`); `cd store && node icon.js` writes assets/icon.png (1024x1024, square corners, RGB, no alpha), assets/favicon.png, assets/splash-icon.png (the mark on clear over the dark splash), assets/android-icon-foreground.png (the mark in the adaptive safe zone), docs/icon-512.png and docs/apple-touch-icon.png. The placeholder icon is gone.
   - The website's header icon is docs/icon-512.png, now A3; its alt text says what it shows on all three pages. The app's screens never show the icon, so no design render was re-shot. The three option sheets stay in docs/design for the record.
@@ -49,7 +51,7 @@ Newest first. One entry per commit: date, version/build, what changed and why, a
 
 ## TestFlight checklist (1.0.0 build 1), around a real job
 
-Before the build: the Expo project id goes into app.json. The icon is A3 yellow (done).
+Before the build: nothing left to fill in (the Expo project id and the icon are done).
 
 1. Fresh install. Go through the three screens, allow the camera, deny location the first time, skip Photos saving. Close the paywall after its X appears (3 seconds); the "Free, for good" sheet shows.
 2. Make a job from the job chip: "New job" is free the first time. Name it after the real job, fill the client, use the spot's address.
