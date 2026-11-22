@@ -35,6 +35,15 @@ Three concepts in `icon-options.png`, each large and at 60 px on a light and a d
 
 No letters, no brand marks, no hard hat or wrench.
 
+### Second round (`icon-options-2.png`, `node icon.js options2`)
+
+Brian's notes on the first three: corner is closest because it reads as a photo, but none says "a camera that stamps time and place" at a glance. Search results for timestamp camera are mostly white tiles with a camera lens, and one is a yellow tile with a black camera, so no yellow background (pin was too close to that one) and no white tile with a lens and color stripe. All four are on the dark chrome, with yellow as an accent only; C tries safety orange (#FF6A13). Each is shown large and at 60 px on a light and a dark wallpaper. None is picked, and assets/icon.png is still the placeholder.
+
+- A, photo with its stamp: corner made clearer. A photo with a dark stamp block in its bottom corner holding a yellow clock and a yellow pin beside two white lines. Reads as a photo at 60 px; the clock and pin are small there but still show as two yellow marks.
+- B, camera with a stamp strip: a camera body from the front with a yellow lens ring; under the lens, a strip with a clock, a pin and two lines. Says camera first; the strip is a thin band at 60 px.
+- C, photo with a time tag: a framed photo with a bright safety orange tag across the bottom showing 09:41 in segment digits and a pin. Digits are drawn as shapes, so no letters can slip in. The orange tag is the most readable mark at 60 px and the most different from the search results.
+- D, lens with a pin and a clock: a yellow lens ring with a white location pin inside and a yellow clock badge on its corner. The simplest silhouette at 60 px; closest to the lens icons in search, but dark with a pin instead of a glass.
+
 ## The report
 
 Laid out once by src/report/layout.ts as drawing operations on Letter or A4 pages (by region); pdf-lib writes them and Skia draws the same list for the preview, with the same Barlow files. A thin yellow band tops each page. The cover block has the company in condensed capitals, "Photo report", the job, then a fact column (address, client, dates, counts, prepared, notes) and the logo top right. Photos go in two columns by day with their stamps already in the pixels and the report's own caption under each (the time, Before or After, the caption or note, and "Imported" for library photos). Portrait photos sit in a square box at most, so two rows fit a page. Pairs go side by side under BEFORE and AFTER tags. The punch list shows a ticked green box or an empty one, the title and note, "Done Nov 22" or "Open", and its photo count. The sign-off is the client's signature as vector paths over a line, with the name and time. Every page ends with the job and "Page 2 of 5". A heading never sits alone at the bottom of a page.
