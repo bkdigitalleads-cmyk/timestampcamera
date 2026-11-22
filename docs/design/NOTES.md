@@ -44,6 +44,14 @@ Brian's notes on the first three: corner is closest because it reads as a photo,
 - C, photo with a time tag: a framed photo with a bright safety orange tag across the bottom showing 09:41 in segment digits and a pin. Digits are drawn as shapes, so no letters can slip in. The orange tag is the most readable mark at 60 px and the most different from the search results.
 - D, lens with a pin and a clock: a yellow lens ring with a white location pin inside and a yellow clock badge on its corner. The simplest silhouette at 60 px; closest to the lens icons in search, but dark with a pin instead of a glass.
 
+### Third round (`icon-options-3.png`, `node icon.js options3`)
+
+Brian leans to A. Its weakness: at 60 px the dark stamp block gets lost and A reads as a plain photo app. Brian does not want a written-out time, so no digits. None is picked, and assets/icon.png is still the placeholder.
+
+- A1, A as it is now, for comparison.
+- A2, a bigger stamp block: the block covers the lower third of the photo edge to edge (about 40 percent of the photo's height), with a bigger yellow clock and pin and two thick white lines. At 60 px the block and its two yellow marks are the first thing seen.
+- A3, a bright tag: A's photo with C's tag in place of the dark block, running past the frame on both sides, holding a dark clock, a dark pin and two dark lines. Shown in yellow, with a smaller copy in safety orange beside it. At 60 px the tag is the strongest mark of the three and the photo still reads above it.
+
 ## The report
 
 Laid out once by src/report/layout.ts as drawing operations on Letter or A4 pages (by region); pdf-lib writes them and Skia draws the same list for the preview, with the same Barlow files. A thin yellow band tops each page. The cover block has the company in condensed capitals, "Photo report", the job, then a fact column (address, client, dates, counts, prepared, notes) and the logo top right. Photos go in two columns by day with their stamps already in the pixels and the report's own caption under each (the time, Before or After, the caption or note, and "Imported" for library photos). Portrait photos sit in a square box at most, so two rows fit a page. Pairs go side by side under BEFORE and AFTER tags. The punch list shows a ticked green box or an empty one, the title and note, "Done Nov 22" or "Open", and its photo count. The sign-off is the client's signature as vector paths over a line, with the name and time. Every page ends with the job and "Page 2 of 5". A heading never sits alone at the bottom of a page.

@@ -2,6 +2,11 @@
 
 Newest first. One entry per commit: date, version/build, what changed and why, and how it was checked.
 
+- 2026-11-22: 1.0.0 build 1, icon options, third round (A refined).
+  - docs/design/icon-options-3.png (`cd store && node icon.js options3`): A1, A as it was, for comparison; A2, the stamp block covering the lower third of the photo edge to edge with a bigger clock and pin and two thick lines; A3, A's photo with a bright tag in place of the block holding a dark clock, pin and two lines, in yellow with a smaller safety orange copy beside it. Each large and at 60 px on a light and a dark wallpaper. No digits, no letters, no brand marks. Notes in docs/design/NOTES.md.
+  - Nothing picked; assets/icon.png is unchanged (the placeholder). No app code changed.
+  - Checked: `npx tsc --noEmit` clean, `npm test` passing (the sheet's file is checked to exist), each variant looked at large and at 60 px.
+
 - 2026-11-22: 1.0.0 build 1, icon options, second round.
   - docs/design/icon-options-2.png (`cd store && node icon.js options2`): four new variants on the dark background, each large and at 60 px on a light and a dark wallpaper. A, a photo whose stamp block holds a clock and a pin beside two lines. B, a camera from the front with a stamp strip under the lens. C, a framed photo with a safety orange tag showing 09:41 in segment digits and a pin. D, a lens ring with a pin inside and a clock badge. No yellow backgrounds, no white tile with a lens, no letters, no brand marks. Notes on each in docs/design/NOTES.md.
   - Nothing picked; assets/icon.png is unchanged (the placeholder). No app code changed.

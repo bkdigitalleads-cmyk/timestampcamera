@@ -14,6 +14,7 @@ const path = require('path');
 // favicon) and the website's icons.
 // `node icon.js options2` writes docs/design/icon-options-2.png, the second
 // round (A to D) after Brian's notes on the first three. Not wired to `ship` until one is picked.
+// `node icon.js options3` writes docs/design/icon-options-3.png, A refined (A1, A2, A3).
 const ROOT = path.join(__dirname, '..');
 const CHROME = '#15181B';
 const RAISED = '#2A3036';
@@ -263,6 +264,92 @@ async function options2() {
   console.log('docs/design/icon-options-2.png');
 }
 
+// ---------- third round (Nov 22, 2026): A refined ----------
+// Brian leans to A. Its weakness: at 60 px the dark stamp block gets lost and it reads as a
+// plain photo app. No digits (Brian does not want a written-out time). A1 is A as it was, for
+// comparison; A2 makes the stamp block the first thing seen; A3 swaps the block for a bright tag.
+
+/** A's frame and photo; `over` is drawn inside the photo's clip, `outside` on top of everything. */
+const framedPhoto = (bg, over = '', outside = '') => `
+  ${bg ? `<rect width="1024" height="1024" fill="${CHROME}"/>` : ''}
+  <rect x="150" y="190" width="724" height="644" rx="46" fill="${WHITE}"/>
+  ${scene(186, 226, 652, 572, 20)}
+  <clipPath id="photoA"><rect x="186" y="226" width="652" height="572" rx="20"/></clipPath>
+  <g clip-path="url(#photoA)">${over}</g>
+  ${outside}`;
+
+/** A3's bright tag across the bottom, holding a dark clock, a dark pin and two dark lines. */
+const brightTag = (fill) => `
+  <rect x="110" y="566" width="804" height="232" rx="34" fill="${fill}"/>
+  ${clock(250, 682, 64, CHROME, fill)}
+  ${pin(392, 682, 144, CHROME, fill)}
+  <rect x="490" y="626" width="330" height="48" rx="24" fill="${CHROME}"/>
+  <rect x="490" y="702" width="250" height="44" rx="22" fill="${CHROME}"/>`;
+
+const CONCEPTS_3 = [
+  { key: 'A1', label: 'A1. A as it is now', note: 'For comparison: the dark stamp block sits inside the photo.', big: 330, draw: (bg = true) => CONCEPTS_2.A.draw(bg) },
+  {
+    key: 'A2',
+    label: 'A2. Bigger stamp block',
+    note: 'The block covers the lower third of the photo edge to edge, with a bigger clock and pin and two thick lines.',
+    big: 330,
+    draw: (bg = true) =>
+      framedPhoto(
+        bg,
+        `<rect x="186" y="566" width="652" height="232" fill="${CHROME}"/>
+         ${clock(282, 682, 66, YELLOW, CHROME)}
+         ${pin(420, 682, 150, YELLOW, CHROME)}
+         <rect x="514" y="626" width="290" height="48" rx="24" fill="${WHITE}"/>
+         <rect x="514" y="702" width="220" height="44" rx="22" fill="${WHITE}" opacity="0.8"/>`
+      ),
+  },
+  { key: 'A3', label: 'A3. Bright tag, yellow', note: "A's photo with C's tag in place of the block: dark clock, pin and two lines. No digits, no letters.", big: 330, draw: (bg = true) => framedPhoto(bg, '', brightTag(YELLOW)) },
+  { key: 'A3-orange', label: 'A3. Bright tag, safety orange', note: 'The same, in safety orange, shown smaller beside the yellow one.', big: 220, draw: (bg = true) => framedPhoto(bg, '', brightTag(ORANGE)) },
+];
+
+/** docs/design/icon-options-3.png: A1, A2 and A3 (yellow, and a small orange copy), each large and at 60 px on a light and a dark wallpaper. */
+async function options3() {
+  const W = 1840;
+  const H = 1000;
+  const col = W / CONCEPTS_3.length;
+  const esc = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const label = (s, x, y, size, fill = '#15181B', weight = 600) => `<text x="${x}" y="${y}" font-family="DejaVu Sans, Arial" font-size="${size}" font-weight="${weight}" fill="${fill}" text-anchor="middle">${esc(s)}</text>`;
+  const wrapNote = (t, max) => {
+    const out = [];
+    let line = '';
+    for (const w of t.split(' ')) {
+      if ((line + ' ' + w).trim().length > max) {
+        out.push(line.trim());
+        line = w;
+      } else line += ' ' + w;
+    }
+    out.push(line.trim());
+    return out;
+  };
+  let overlay = `<rect width="${W}" height="${H}" fill="#F3F4F1"/>`;
+  overlay += label('Timestamp Camera: icon options, third round (A refined). Brian picks.', W / 2, 56, 30);
+  CONCEPTS_3.forEach((c, i) => {
+    const cx = col * i + col / 2;
+    overlay += label(c.label, cx, 520, 24);
+    wrapNote(c.note, 40).forEach((l, j) => (overlay += label(l, cx, 556 + j * 24, 17, '#545A60', 400)));
+    overlay += `<rect x="${cx - 190}" y="660" width="180" height="180" rx="18" fill="#DDE3EA"/>`;
+    overlay += `<rect x="${cx + 10}" y="660" width="180" height="180" rx="18" fill="#1B2430"/>`;
+  });
+  overlay += label('60 px on a light and a dark wallpaper under each. Large tiles are 330 px (the orange copy 220 px); iOS rounds the corners. No letters, no digits, no brand marks.', W / 2, 920, 18, '#545A60', 400);
+  const parts = [{ input: Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">${overlay}</svg>`), top: 0, left: 0 }];
+  const round = (size, r) => Buffer.from(`<svg width="${size}" height="${size}"><rect width="${size}" height="${size}" rx="${r}" fill="#fff"/></svg>`);
+  const tile = async (c, size) => sharp(await sharp(Buffer.from(svg(c.draw(), size))).resize(size, size).png().toBuffer()).composite([{ input: round(size, size * 0.225), blend: 'dest-in' }]).png().toBuffer();
+  for (const [i, c] of CONCEPTS_3.entries()) {
+    const cx = col * i + col / 2;
+    parts.push({ input: await tile(c, c.big), top: Math.round(95 + (330 - c.big) / 2), left: Math.round(cx - c.big / 2) });
+    const sm = await tile(c, 60);
+    parts.push({ input: sm, top: 720, left: Math.round(cx - 190 + 60) });
+    parts.push({ input: sm, top: 720, left: Math.round(cx + 10 + 60) });
+  }
+  await sharp({ create: { width: W, height: H, channels: 3, background: '#F3F4F1' } }).composite(parts).png().toFile(path.join(ROOT, 'docs/design/icon-options-3.png'));
+  console.log('docs/design/icon-options-3.png');
+}
+
 async function ship(name) {
   if (!CONCEPTS[name]) throw new Error(`Pick one of: ${Object.keys(CONCEPTS).join(', ')}`);
   const flat = async (size, file) => sharp(await png(name, size)).flatten({ background: CHROME }).removeAlpha().png().toFile(path.join(ROOT, file));
@@ -277,4 +364,5 @@ async function ship(name) {
 
 if (process.argv[2] === 'ship') ship(process.argv[3]).catch((e) => (console.error(e.message), process.exit(1)));
 else if (process.argv[2] === 'options2') options2();
+else if (process.argv[2] === 'options3') options3();
 else options();

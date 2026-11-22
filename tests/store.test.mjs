@@ -198,6 +198,7 @@ test('design: the renders at 393x852 points (2x), the icon options, the report s
   for (const f of after) assert.deepEqual(png(`docs/design/after/${f}`), { w: 786, h: 1704 }, f);
   assert.ok(existsSync(path.join(root, 'docs/design/icon-options.png')));
   assert.ok(existsSync(path.join(root, 'docs/design/icon-options-2.png')), 'the second round, A to D');
+  assert.ok(existsSync(path.join(root, 'docs/design/icon-options-3.png')), 'the third round, A refined');
   assert.ok(existsSync(path.join(root, 'docs/design/stamp-proof.jpg')));
   assert.ok(readdirSync(path.join(root, 'docs/design/report')).length >= 3);
   // No icon is picked: store/icon.js has no CHOSEN, and assets/icon.png is the placeholder.
