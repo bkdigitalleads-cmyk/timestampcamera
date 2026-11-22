@@ -103,8 +103,8 @@ export interface Place {
 
 /** Everything the stamp can print for one photo. */
 export interface StampContext {
-  /** When the photo was taken (ms). */
-  time: number;
+  /** When the photo was taken (ms). Null for an imported file with no date: the stamp leaves the date and time off. */
+  time: number | null;
   place: Place | null;
   jobName: string;
   company: string;
@@ -125,8 +125,8 @@ const SEP = '  ·  ';
 
 /** The lines one photo's stamp prints, by template. Empty lines are dropped. */
 export function stampLines(s: StampSettings, c: StampContext): StampContent {
-  const p = partsOf(c.time);
-  const when = [s.show.date ? formatDate(p, s.dateStyle) : '', s.show.time ? formatTime(p, s.clock, s.seconds) : ''].filter(Boolean).join('  ');
+  const p = c.time == null ? null : partsOf(c.time);
+  const when = p ? [s.show.date ? formatDate(p, s.dateStyle) : '', s.show.time ? formatTime(p, s.clock, s.seconds) : ''].filter(Boolean).join('  ') : '';
   const hasFix = c.place != null && validCoords(c.place.lat, c.place.lng);
   const coords = hasFix && s.show.coords ? formatCoords(c.place!.lat, c.place!.lng) : '';
   const altitude = hasFix && s.show.altitude ? formatAltitude(c.place!.altitude, s.units) ?? '' : '';
