@@ -19,7 +19,7 @@ import PhotoView from './src/screens/PhotoView';
 import Report from './src/screens/Report';
 import Settings from './src/screens/Settings';
 import PaywallModal from './src/screens/Paywall';
-import Welcome, { Permissions, StampShow, TrialSteps } from './src/screens/Welcome';
+import Intro, { Permissions, StampShow, TrialSteps } from './src/screens/Intro';
 import { GoButton, Sheet, Toast } from './src/ui/Site';
 
 /** A screen over the camera. Back pops one. */
@@ -94,7 +94,7 @@ function Shell() {
     return (
       <View style={{ flex: 1, backgroundColor: theme.bg, paddingTop: insets.top }}>
         <StatusBar style="dark" />
-        {step === 'intro' && <Welcome onDone={() => setStep('perms')} />}
+        {step === 'intro' && <Intro onDone={() => setStep('perms')} />}
         {step === 'perms' && <Permissions onDone={() => setStep('trial')} />}
         {(step === 'trial' || step === 'paywall') && <TrialSteps onDone={openOnboardingPaywall} />}
         <PaywallModal privacyUrl={PRIVACY_URL} onboarding hero={<View style={{ alignItems: 'center' }}><StampShow width={150} height={160} /></View>} />

@@ -6,12 +6,12 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Alert, Image, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import { useTheme, radius, space, type, Theme } from '../theme';
+import { useTheme, space, Theme } from '../theme';
 import { useApp } from '../state';
 import { useData } from '../data';
 import type { Photo } from '../model';
 import { jobLabel } from '../model';
-import { longDay } from '../jobs';
+import { longDay, shortDate } from '../jobs';
 import { formatCoords, formatTime, partsOf } from '../stamp/format';
 import { CORNERS, Corner, SIZES, StampSettings, TEMPLATES } from '../stamp/content';
 import { askPhotosAccess, copyToPhotos, restamp } from '../capture';
@@ -61,7 +61,7 @@ export default function PhotoView({ id, onBack, onTakeAfter, onPhoto }: { id: st
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
-      <Header theme={theme} title={jobLabel({ name: jobName })} sub={`${longDay(p.takenAt)}${p.stamp?.noTime ? '' : `, ${time}`}`} onBack={onBack} />
+      <Header theme={theme} title={jobLabel({ name: jobName })} sub={`${shortDate(p.takenAt)}${p.stamp?.noTime ? '' : `, ${formatTime(partsOf(p.takenAt), data.stamp.clock, false)}`}`} onBack={onBack} />
       <ScrollView contentContainerStyle={{ paddingBottom: space.xxl * 2 }} keyboardShouldPersistTaps="handled">
         <Image key={stamp} source={{ uri: `${uriOf(original ? p.original : p.file)}?v=${stamp}` }} style={{ width, height: Math.min(h, width * 1.5), backgroundColor: '#000' }} resizeMode="contain" accessibilityLabel={original ? 'The original, without the stamp' : `Photo with stamp: ${p.stamp?.lines.join('. ') ?? ''}`} />
         <View style={styles.body}>

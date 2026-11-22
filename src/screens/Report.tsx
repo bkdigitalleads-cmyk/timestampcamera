@@ -162,6 +162,7 @@ export default function Report({ jobId, onBack }: { jobId: string; onBack: () =>
           </View>
         ) : null}
         <PlainButton theme={theme} glyph="sign" label={signoff ? 'Sign again' : 'Client signs here'} onPress={() => setSigning(true)} />
+        <Hint theme={theme}>Share report opens the share sheet: Mail, Messages, Save to Files and the rest.</Hint>
 
         <FieldLabel theme={theme} right={report ? <Text style={[type.small, { color: theme.inkSoft }]}>{report.pages.length === 1 ? '1 page' : `${report.pages.length} pages`}</Text> : undefined}>
           Preview
@@ -176,11 +177,12 @@ export default function Report({ jobId, onBack }: { jobId: string; onBack: () =>
         )}
       </ScrollView>
       <View style={[styles.bottom, { paddingBottom: Math.max(insets.bottom, space.m), borderTopColor: theme.rule }]}>
-        <GoButton theme={theme} glyph="share" label="Share report" onPress={() => go('share')} busy={busy === 'share'} disabled={!images || busy != null} hint="Mail, Messages, Save to Files and more" />
         <View style={styles.row}>
-          <PlainButton theme={theme} grow glyph="print" label="Print" onPress={() => go('print')} disabled={!images || busy != null} />
+          <View style={{ flex: 1 }}>
+            <GoButton theme={theme} glyph="share" label="Share report" onPress={() => go('share')} busy={busy === 'share'} disabled={!images || busy != null} hint="Mail, Messages, Save to Files and more" />
+          </View>
+          <PlainButton theme={theme} glyph="print" label="Print" onPress={() => go('print')} disabled={!images || busy != null} />
         </View>
-        <Hint theme={theme} style={{ textAlign: 'center' }}>Save to Files is in the share sheet.</Hint>
       </View>
       <SignSheet
         theme={theme}
@@ -235,7 +237,7 @@ function SignSheet({ theme, visible, client, onClose, onDone }: { theme: Theme; 
 const styles = StyleSheet.create({
   scroll: { padding: space.l, gap: space.l, paddingBottom: space.xxl },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space.s },
-  row: { flexDirection: 'row', gap: space.s },
+  row: { flexDirection: 'row', gap: space.s, alignItems: 'center' },
   wait: { alignItems: 'center', gap: space.s, paddingVertical: space.xxl },
   bottom: { paddingHorizontal: space.l, paddingTop: space.m, gap: space.s, borderTopWidth: StyleSheet.hairlineWidth },
 });

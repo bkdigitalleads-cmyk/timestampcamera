@@ -31,7 +31,7 @@ const LINES: { key: keyof StampShow; label: string; sub?: string; pro?: ProFeatu
   { key: 'note', label: 'Note' },
   { key: 'company', label: 'Company name', sub: 'Full template. Set it in Settings.', pro: 'company' },
   { key: 'logo', label: 'Logo', sub: 'Standard and Full. Add it in Settings.', pro: 'logo' },
-  { key: 'map', label: 'Map of the spot', sub: 'Full template. The map picture comes from Apple Maps.', pro: 'map' },
+  { key: 'map', label: 'Map of the spot', sub: 'Full template. The map picture is loaded for that spot, like any map.', pro: 'map' },
 ];
 
 export default function StampEditor({ onBack }: { onBack: () => void }) {

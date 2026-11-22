@@ -60,7 +60,7 @@ function trialOffer(): Promise<TrialOffer | null> {
   return offerPromise;
 }
 
-export default function Welcome({ onDone }: { onDone: () => void }) {
+export default function Intro({ onDone }: { onDone: () => void }) {
   const theme = useTheme();
   const [step, setStep] = useState(0);
   useEffect(() => {
@@ -114,7 +114,7 @@ function JobsShow({ theme }: { theme: Theme }) {
 
 function ReportShow({ theme, width, height }: { theme: Theme; width: number; height: number }) {
   const pw = Math.min(width * 0.82, height * 0.75);
-  const cell = (pw - 40) / 2;
+  const cell = Math.floor((pw - 32 - 10) / 2);
   return (
     <View style={[styles.page, { width: pw, borderColor: theme.edge }]} accessible accessibilityRole="image" accessibilityLabel="A photo report: the job, photos in a grid with captions, and the punch list">
       <View style={{ height: 5, backgroundColor: theme.accent, marginHorizontal: -16, marginTop: -16, marginBottom: 12 }} />
