@@ -65,7 +65,7 @@ async function burnAndWrite(original: Uint8Array, s: StampJob, paths: { file: st
   return {
     width: out.width,
     height: out.height,
-    stamp: { template: s.settings.template, corner: s.settings.corner, size: s.settings.size, lines: content.lines, logo: content.logo && !!out.layout.logo, map: content.map && !!out.layout.map },
+    stamp: { template: s.settings.template, corner: s.settings.corner, size: s.settings.size, lines: content.lines, logo: content.logo && !!out.layout.logo, map: content.map && !!out.layout.map, noTime: s.ctx.time == null },
   };
 }
 
@@ -154,4 +154,22 @@ export async function restamp(p: Photo, s: StampJob, note: string): Promise<Phot
   const original = readRel(p.original);
   const done = await burnAndWrite(original, s, { file: p.file, thumb: p.thumb });
   return { ...p, note, width: done.width, height: done.height, stamp: done.stamp };
+}
+
+/** The place an imported photo stamps with: its own GPS, with an address from the phone's geocoder when it answers within 4 seconds. */
+export async function importedPlace(lat: number | null, lng: number | null, altitude: number | null): Promise<Place | null> {
+  if (lat == null || lng == null) return null;
+  let address: string | null = null;
+  try {
+    const Location = await import('expo-location');
+    const perm = await Location.getForegroundPermissionsAsync();
+    if (perm.granted) {
+      const res = await Promise.race([Location.reverseGeocodeAsync({ latitude: lat, longitude: lng }), new Promise<null>((r) => setTimeout(() => r(null), 4000))]);
+      const { formatAddress } = await import('./stamp/format');
+      address = res ? formatAddress(res[0] ?? null) : null;
+    }
+  } catch {
+    // coordinates only
+  }
+  return { lat, lng, altitude, address };
 }

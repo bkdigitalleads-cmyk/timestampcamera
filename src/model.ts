@@ -25,6 +25,8 @@ export interface PhotoStamp {
   lines: string[];
   logo: boolean;
   map: boolean;
+  /** Printed without a date and time (an imported file that had none). */
+  noTime?: boolean;
 }
 
 export interface Photo {
