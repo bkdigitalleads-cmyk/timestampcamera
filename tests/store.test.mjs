@@ -201,9 +201,27 @@ test('design: the renders at 393x852 points (2x), the icon options, the report s
   assert.ok(existsSync(path.join(root, 'docs/design/icon-options-3.png')), 'the third round, A refined');
   assert.ok(existsSync(path.join(root, 'docs/design/stamp-proof.jpg')));
   assert.ok(readdirSync(path.join(root, 'docs/design/report')).length >= 3);
-  // No icon is picked: store/icon.js has no CHOSEN, and assets/icon.png is the placeholder.
-  assert.doesNotMatch(read('store/icon.js'), /const CHOSEN =/);
-  assert.match(read('docs/design/NOTES.md'), /None is picked; Brian picks/);
+  // Brian's pick: A3 yellow, named in store/icon.js so `node icon.js` regenerates every icon file.
+  assert.match(read('store/icon.js'), /const CHOSEN = 'A3-yellow';/);
+});
+
+test('icon: A3 yellow at every size; assets/icon.png is 1024x1024 RGB with no alpha and square corners', () => {
+  const info = (f) => {
+    const b = readFileSync(path.join(root, f));
+    assert.equal(b.toString('latin1', 1, 4), 'PNG', f);
+    return { w: b.readUInt32BE(16), h: b.readUInt32BE(20), colorType: b[25] };
+  };
+  // PNG color type 2 is RGB (no alpha); 6 is RGBA.
+  assert.deepEqual(info('assets/icon.png'), { w: 1024, h: 1024, colorType: 2 });
+  assert.deepEqual(info('assets/favicon.png'), { w: 48, h: 48, colorType: 2 });
+  assert.deepEqual(info('docs/icon-512.png'), { w: 512, h: 512, colorType: 2 });
+  assert.deepEqual(info('docs/apple-touch-icon.png'), { w: 180, h: 180, colorType: 2 });
+  assert.equal(info('assets/splash-icon.png').w, 400);
+  assert.equal(info('assets/android-icon-foreground.png').w, 1024);
+  assert.equal(app.icon, './assets/icon.png');
+  assert.equal(app.android.adaptiveIcon.backgroundColor, '#15181B');
+  assert.match(read('docs/design/NOTES.md'), /Chosen: A3 yellow/);
+  for (const f of ['index.html', 'privacy.html', 'support.html']) assert.match(read(`docs/${f}`), /app icon: a photo with a yellow tag/);
 });
 
 test('design: ink on the yellow main button and on the light background is well above 4.5:1', () => {

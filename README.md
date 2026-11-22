@@ -4,6 +4,6 @@ The stamp camera for people who photograph work: the date, time, address and coo
 
 - App: Expo SDK 57, React Native, TypeScript. `npm install`, then `npx tsc --noEmit` and `npm test`.
 - Website: `docs/` (GitHub Pages): landing page, privacy policy, support with an FAQ.
-- Store listing: `store/metadata.md`. Icon concepts: `cd store && npm install && node icon.js` (`node icon.js ship <name>` once Brian picks).
+- Store listing: `store/metadata.md`. Icon: A3 yellow; `cd store && npm install && node icon.js` regenerates every icon file (`node icon.js options`, `options2`, `options3` redraw the option sheets).
 - Design: `docs/design/NOTES.md`, with the renders, the report sample and the icon options.
 - Rules for working in this repo: `CLAUDE.md`. Change log and TestFlight checklist: `NOTES.md`.

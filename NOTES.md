@@ -2,6 +2,12 @@
 
 Newest first. One entry per commit: date, version/build, what changed and why, and how it was checked.
 
+- 2026-11-22: 1.0.0 build 1, the app icon: A3 yellow (Brian's pick).
+  - A photo with a bright yellow tag across its bottom holding a dark clock, a dark pin and two dark lines, on the dark chrome tile. Named in store/icon.js (`CHOSEN = 'A3-yellow'`); `cd store && node icon.js` writes assets/icon.png (1024x1024, square corners, RGB, no alpha), assets/favicon.png, assets/splash-icon.png (the mark on clear over the dark splash), assets/android-icon-foreground.png (the mark in the adaptive safe zone), docs/icon-512.png and docs/apple-touch-icon.png. The placeholder icon is gone.
+  - The website's header icon is docs/icon-512.png, now A3; its alt text says what it shows on all three pages. The app's screens never show the icon, so no design render was re-shot. The three option sheets stay in docs/design for the record.
+  - app.json is unchanged (it already points at these files, with the dark #15181B splash and adaptive background).
+  - Checked: `npx tsc --noEmit` clean, `npm test` passing (new: CHOSEN is A3-yellow; assets/icon.png is 1024x1024 with PNG color type 2, RGB without alpha; the favicon and website icons are RGB at their sizes; the alt text), `npx expo export --platform ios` bundles.
+
 - 2026-11-22: 1.0.0 build 1, icon options, third round (A refined).
   - docs/design/icon-options-3.png (`cd store && node icon.js options3`): A1, A as it was, for comparison; A2, the stamp block covering the lower third of the photo edge to edge with a bigger clock and pin and two thick lines; A3, A's photo with a bright tag in place of the block holding a dark clock, pin and two lines, in yellow with a smaller safety orange copy beside it. Each large and at 60 px on a light and a dark wallpaper. No digits, no letters, no brand marks. Notes in docs/design/NOTES.md.
   - Nothing picked; assets/icon.png is unchanged (the placeholder). No app code changed.
@@ -43,7 +49,7 @@ Newest first. One entry per commit: date, version/build, what changed and why, a
 
 ## TestFlight checklist (1.0.0 build 1), around a real job
 
-Before the build: Brian picks the icon (`cd store && node icon.js ship <name>`), and the Expo project id goes into app.json.
+Before the build: the Expo project id goes into app.json. The icon is A3 yellow (done).
 
 1. Fresh install. Go through the three screens, allow the camera, deny location the first time, skip Photos saving. Close the paywall after its X appears (3 seconds); the "Free, for good" sheet shows.
 2. Make a job from the job chip: "New job" is free the first time. Name it after the real job, fill the client, use the spot's address.

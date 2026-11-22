@@ -27,7 +27,13 @@ Its own names, not Estimate Maker's: Press, GoButton (the yellow main action), P
 
 ## Icon
 
-Three concepts in `icon-options.png`, each large and at 60 px on a light and a dark wallpaper (`cd store && node icon.js`). None is picked; Brian picks, then `node icon.js ship <name>` writes assets/ and the website icons. Until then assets/icon.png is a plain placeholder (a dark tile with a thin frame), and the TestFlight build should not go out with it.
+Chosen: A3 yellow (Brian, Nov 22, 2026). A photo in a white frame with a bright hi-vis yellow tag across its bottom, running past the frame on both sides, holding a dark clock, a dark location pin and two dark lines, on the dark chrome tile. It says "a photo with the time and place stamped on it" at a glance, the tag is the strongest mark at 60 px, and it stays clear of the white lens tiles and the yellow camera tile in search. No letters, no digits, no brand marks.
+
+`cd store && node icon.js` regenerates every icon file from it (`CHOSEN = 'A3-yellow'` in store/icon.js): assets/icon.png at 1024x1024, square corners, RGB with no alpha (iOS rounds the corners); assets/favicon.png; assets/splash-icon.png, the mark on clear over the dark splash; assets/android-icon-foreground.png, the mark inside the adaptive icon's safe zone over the same dark background; docs/icon-512.png and docs/apple-touch-icon.png, which the website uses. The app's own screens never show the icon, so no design render changed. The three option sheets below stay for the record.
+
+### First round
+
+Three concepts in `icon-options.png`, each large and at 60 px on a light and a dark wallpaper (`cd store && node icon.js`). `node icon.js options` redraws the sheet.
 
 1. corner: a photo with the stamp block printed in its bottom corner, on chrome. Says exactly what the app does; the stamp block gets small at 60 px.
 2. pin: a map pin whose head is a clock face, on hi-vis yellow. The strongest silhouette at 60 px and the most different from the big stamp cameras, but says "where and when" more than "camera".
@@ -37,16 +43,14 @@ No letters, no brand marks, no hard hat or wrench.
 
 ### Second round (`icon-options-2.png`, `node icon.js options2`)
 
-Brian's notes on the first three: corner is closest because it reads as a photo, but none says "a camera that stamps time and place" at a glance. Search results for timestamp camera are mostly white tiles with a camera lens, and one is a yellow tile with a black camera, so no yellow background (pin was too close to that one) and no white tile with a lens and color stripe. All four are on the dark chrome, with yellow as an accent only; C tries safety orange (#FF6A13). Each is shown large and at 60 px on a light and a dark wallpaper. None is picked, and assets/icon.png is still the placeholder.
-
-- A, photo with its stamp: corner made clearer. A photo with a dark stamp block in its bottom corner holding a yellow clock and a yellow pin beside two white lines. Reads as a photo at 60 px; the clock and pin are small there but still show as two yellow marks.
+Brian's notes on the first three: corner is closest because it reads as a photo, but none says "a camera that stamps time and place" at a glance. Search results for timestamp camera are mostly white tiles with a camera lens, and one is a yellow tile with a black camera, so no yellow background (pin was too close to that one) and no white tile with a lens and color stripe. All four are on the dark chrome, with yellow as an accent only; C tries safety orange (#FF6A13). Each is shown large and at 60 px on a light and a dark wallpaper. - A, photo with its stamp: corner made clearer. A photo with a dark stamp block in its bottom corner holding a yellow clock and a yellow pin beside two white lines. Reads as a photo at 60 px; the clock and pin are small there but still show as two yellow marks.
 - B, camera with a stamp strip: a camera body from the front with a yellow lens ring; under the lens, a strip with a clock, a pin and two lines. Says camera first; the strip is a thin band at 60 px.
 - C, photo with a time tag: a framed photo with a bright safety orange tag across the bottom showing 09:41 in segment digits and a pin. Digits are drawn as shapes, so no letters can slip in. The orange tag is the most readable mark at 60 px and the most different from the search results.
 - D, lens with a pin and a clock: a yellow lens ring with a white location pin inside and a yellow clock badge on its corner. The simplest silhouette at 60 px; closest to the lens icons in search, but dark with a pin instead of a glass.
 
 ### Third round (`icon-options-3.png`, `node icon.js options3`)
 
-Brian leans to A. Its weakness: at 60 px the dark stamp block gets lost and A reads as a plain photo app. Brian does not want a written-out time, so no digits. None is picked, and assets/icon.png is still the placeholder.
+Brian leans to A. Its weakness: at 60 px the dark stamp block gets lost and A reads as a plain photo app. Brian does not want a written-out time, so no digits. Brian picked A3 yellow from this round.
 
 - A1, A as it is now, for comparison.
 - A2, a bigger stamp block: the block covers the lower third of the photo edge to edge (about 40 percent of the photo's height), with a bigger yellow clock and pin and two thick white lines. At 60 px the block and its two yellow marks are the first thing seen.

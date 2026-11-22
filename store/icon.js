@@ -1,20 +1,21 @@
 const sharp = require('sharp');
 const path = require('path');
 
-// Timestamp Camera's icon concepts. Brian picks; none is chosen here.
-// `node icon.js` writes docs/design/icon-options.png: three concepts in the
-// app's palette (camera chrome, hi-vis yellow, white), each large and at
-// 60 px on a light and a dark wallpaper.
-//   corner  - a photo with the stamp block printed in its bottom corner
-//   pin     - a map pin whose head is a clock face, on hi-vis yellow
-//   shutter - the app's yellow shutter ring over three stamp lines
-// No brand marks, no letters, no hard hat. Until one is picked, assets/icon.png
-// is a plain placeholder (a dark tile with a thin frame); `node icon.js ship <name>`
-// writes the picked concept to assets/ (icon, splash, Android foreground,
-// favicon) and the website's icons.
-// `node icon.js options2` writes docs/design/icon-options-2.png, the second
-// round (A to D) after Brian's notes on the first three. Not wired to `ship` until one is picked.
-// `node icon.js options3` writes docs/design/icon-options-3.png, A refined (A1, A2, A3).
+// Timestamp Camera's icon.
+// Brian's pick (Nov 22, 2026): A3 yellow, a photo with a bright yellow tag
+// across its bottom holding a dark clock, a dark pin and two dark lines, on
+// the dark chrome background. It is CHOSEN below.
+// `node icon.js` writes the chosen icon everywhere it is used:
+//   assets/icon.png (1024, square corners, no alpha), assets/favicon.png,
+//   assets/splash-icon.png (the mark on clear, over the dark splash),
+//   assets/android-icon-foreground.png (the mark inside the adaptive safe zone),
+//   docs/icon-512.png and docs/apple-touch-icon.png.
+// `node icon.js ship <name>` writes another shippable concept the same way.
+// The option sheets stay for the record:
+//   `node icon.js options`  docs/design/icon-options.png, round one (corner, pin, shutter)
+//   `node icon.js options2` docs/design/icon-options-2.png, round two (A to D)
+//   `node icon.js options3` docs/design/icon-options-3.png, round three (A1, A2, A3)
+// No brand marks, no letters, no digits.
 const ROOT = path.join(__dirname, '..');
 const CHROME = '#15181B';
 const RAISED = '#2A3036';
@@ -350,19 +351,38 @@ async function options3() {
   console.log('docs/design/icon-options-3.png');
 }
 
+/** Every concept that can ship, by name: draw(bg) gives the 1024 artwork with or without the dark tile. */
+const SHIPPABLE = {
+  ...Object.fromEntries(Object.entries(CONCEPTS).map(([k, f]) => [k, f])),
+  ...Object.fromEntries(Object.entries(CONCEPTS_2).map(([k, c]) => [k, c.draw])),
+  ...Object.fromEntries(CONCEPTS_3.map((c) => [c.key === 'A3' ? 'A3-yellow' : c.key, c.draw])),
+};
+
+/** Brian's pick: A3 yellow. */
+const CHOSEN = 'A3-yellow';
+
 async function ship(name) {
-  if (!CONCEPTS[name]) throw new Error(`Pick one of: ${Object.keys(CONCEPTS).join(', ')}`);
-  const flat = async (size, file) => sharp(await png(name, size)).flatten({ background: CHROME }).removeAlpha().png().toFile(path.join(ROOT, file));
+  const draw = SHIPPABLE[name];
+  if (!draw) throw new Error(`Pick one of: ${Object.keys(SHIPPABLE).join(', ')}`);
+  const tile = (size) => sharp(Buffer.from(svg(draw(true), size))).resize(size, size).png().toBuffer();
+  // Square corners and no alpha: iOS rounds the corners itself and rejects an icon with transparency.
+  const flat = async (size, file) => sharp(await tile(size)).flatten({ background: CHROME }).removeAlpha().png().toFile(path.join(ROOT, file));
   await flat(1024, 'assets/icon.png');
   await flat(48, 'assets/favicon.png');
   await flat(512, 'docs/icon-512.png');
   await flat(180, 'docs/apple-touch-icon.png');
-  await sharp(Buffer.from(svg(CONCEPTS[name](false), 1024))).png().toFile(path.join(ROOT, 'assets/android-icon-foreground.png'));
-  await sharp(await png(name, 400)).png().toFile(path.join(ROOT, 'assets/splash-icon.png'));
+  // The mark alone, on clear: the splash and the adaptive background are the same dark chrome.
+  await sharp(Buffer.from(svg(draw(false), 400))).resize(400, 400).png().toFile(path.join(ROOT, 'assets/splash-icon.png'));
+  // Android's adaptive foreground: the mark scaled into the centre safe zone (the middle 66 percent).
+  const safe = `<g transform="translate(512 512) scale(0.66) translate(-512 -512)">${draw(false)}</g>`;
+  await sharp(Buffer.from(svg(safe, 1024))).resize(1024, 1024).png().toFile(path.join(ROOT, 'assets/android-icon-foreground.png'));
   console.log(`shipped ${name}`);
 }
 
-if (process.argv[2] === 'ship') ship(process.argv[3]).catch((e) => (console.error(e.message), process.exit(1)));
-else if (process.argv[2] === 'options2') options2();
-else if (process.argv[2] === 'options3') options3();
-else options();
+const cmd = process.argv[2];
+const fail = (e) => (console.error(e.message), process.exit(1));
+if (cmd === 'ship') ship(process.argv[3]).catch(fail);
+else if (cmd === 'options') options().catch(fail);
+else if (cmd === 'options2') options2().catch(fail);
+else if (cmd === 'options3') options3().catch(fail);
+else ship(CHOSEN).catch(fail);
