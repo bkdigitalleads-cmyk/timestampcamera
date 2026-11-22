@@ -89,7 +89,7 @@ export default function Job({ id, onBack, onPhoto, onTakeAfter, onShootItem, onR
       setImporting(`Stamping ${done + 1} of ${res.assets.length}`);
       try {
         const meta = importMeta(readJpeg(readUri(a.uri)), a.exif ?? null);
-        const place = await importedPlace(meta.lat, meta.lng, meta.altitude);
+        const place = await importedPlace(meta.lat, meta.lng, meta.altitude, data.stamp.show.address);
         const p = await makePhoto({
           uri: a.uri,
           jobId: id,

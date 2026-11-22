@@ -2,9 +2,11 @@
  * The live place for the stamp, while the camera is on screen. Location is
  * "when in use" only: the watch starts when the camera shows and stops when
  * it goes away, and nothing runs in the background. The address comes from
- * the phone's own geocoder (expo-location's reverseGeocodeAsync), throttled
- * by stamp/place.ts. Denied or no fix: `place` is null and the stamp prints
- * the date and time only.
+ * the phone's geocoder (expo-location's reverseGeocodeAsync, which asks
+ * Apple's location service and so sends it the coordinates), throttled by
+ * stamp/place.ts, and only while `wantAddress` is true: with the stamp's
+ * Address line off, no lookup is made at all. Denied or no fix: `place` is
+ * null and the stamp prints the date and time only.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
@@ -15,12 +17,14 @@ import type { Place } from '../stamp/content';
 
 export type LocationAccess = 'unknown' | 'granted' | 'denied' | 'ask';
 
-export function useLocation(active: boolean): { place: Place | null; fix: Fix | null; access: LocationAccess; request: () => Promise<void> } {
+export function useLocation(active: boolean, wantAddress: boolean): { place: Place | null; fix: Fix | null; access: LocationAccess; request: () => Promise<void> } {
   const [access, setAccess] = useState<LocationAccess>('unknown');
   const [fix, setFix] = useState<Fix | null>(null);
   const [looked, setLooked] = useState<Looked | null>(null);
   const lookedRef = useRef<Looked | null>(null);
   const asking = useRef(false);
+  const want = useRef(wantAddress);
+  want.current = wantAddress;
 
   const check = useCallback(async () => {
     try {
@@ -49,7 +53,7 @@ export function useLocation(active: boolean): { place: Place | null; fix: Fix | 
   }, []);
 
   const geocode = useCallback(async (f: Fix) => {
-    if (asking.current || !needsGeocode(lookedRef.current, f, Date.now())) return;
+    if (asking.current || !needsGeocode(lookedRef.current, f, Date.now(), want.current)) return;
     asking.current = true;
     let address: string | null = null;
     try {
@@ -93,8 +97,14 @@ export function useLocation(active: boolean): { place: Place | null; fix: Fix | 
     };
   }, [active, access, geocode]);
 
+  // Turning the Address line on with a fix already in hand looks it up straight away.
+  useEffect(() => {
+    if (wantAddress && fix) geocode(fix);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wantAddress]);
+
   const now = Date.now();
   const current = access === 'granted' ? freshFix(fix, now) : null;
-  const place: Place | null = current ? { lat: current.lat, lng: current.lng, altitude: current.altitude, address: addressFor(looked, current) } : null;
+  const place: Place | null = current ? { lat: current.lat, lng: current.lng, altitude: current.altitude, address: wantAddress ? addressFor(looked, current) : null } : null;
   return { place, fix: current, access, request };
 }

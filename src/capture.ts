@@ -3,7 +3,8 @@
  * the original (inside the app only, so a stamp can be corrected later),
  * the stamp is burned into a full-size copy by src/stamp/burn.ts with
  * native Skia, and a small copy is made for lists. The record goes in the
- * job; a copy goes to Photos when saving is on. Nothing leaves the phone.
+ * job; a copy goes to Photos when saving is on. Photos stay on the phone
+ * until the person shares them.
  */
 import { Asset } from 'expo-asset';
 import { File } from 'expo-file-system';
@@ -156,11 +157,15 @@ export async function restamp(p: Photo, s: StampJob, note: string): Promise<Phot
   return { ...p, note, width: done.width, height: done.height, stamp: done.stamp };
 }
 
-/** The place an imported photo stamps with: its own GPS, with an address from the phone's geocoder when it answers within 4 seconds. */
-export async function importedPlace(lat: number | null, lng: number | null, altitude: number | null): Promise<Place | null> {
+/**
+ * The place an imported photo stamps with: its own GPS, with an address from
+ * the phone's geocoder when it answers within 4 seconds. With the Address
+ * line off, no lookup is made (the coordinates would go to Apple for it).
+ */
+export async function importedPlace(lat: number | null, lng: number | null, altitude: number | null, wantAddress: boolean): Promise<Place | null> {
   if (lat == null || lng == null) return null;
   let address: string | null = null;
-  try {
+  if (wantAddress) try {
     const Location = await import('expo-location');
     const perm = await Location.getForegroundPermissionsAsync();
     if (perm.granted) {

@@ -6,9 +6,9 @@
  * last good picture, or prints without a map.
  *
  * The map is Apple Maps (react-native-maps' default on iOS, no key). Like
- * any map in any app, Apple's servers send the map for the area shown; the
- * photos and the stamp never leave the phone. Settings says so beside the
- * switch.
+ * any map in any app, Apple receives the area shown and sends back the map
+ * for it; the photos stay on the phone. The stamp editor says so beside the
+ * switch, and the privacy policy says it plainly.
  */
 import React, { useEffect, useRef } from 'react';
 import { View } from 'react-native';

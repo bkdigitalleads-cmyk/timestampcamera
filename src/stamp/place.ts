@@ -3,8 +3,10 @@
  * imports, checked by `npm test`.
  *
  * The phone's position streams in while the camera is open. The address
- * comes from the device geocoder, which needs signal and can be slow, so it
- * is asked again only after moving or after a while, and an address is
+ * comes from the device geocoder (Apple's location service, which receives
+ * the coordinates for the lookup), needs signal and can be slow, so it is
+ * asked only while the Address line is on, and again only after moving or
+ * after a while, and an address is
  * used only while the phone is still near where it was looked up. The
  * shutter never waits: what the live stamp shows at that moment prints.
  */
@@ -35,8 +37,14 @@ export function distanceMeters(a: { lat: number; lng: number }, b: { lat: number
   return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
 }
 
-/** Ask the geocoder again: never asked, moved 25 m, or 2 minutes since a failed ask (or 10 since a good one). */
-export function needsGeocode(last: Looked | null, fix: Fix, now: number): boolean {
+/**
+ * Ask the geocoder again: never asked, moved 25 m, or 2 minutes since a
+ * failed ask (or 10 since a good one). Never when the stamp's Address line
+ * is off: the lookup sends the coordinates to Apple's location service, so
+ * it is made only when the address will print.
+ */
+export function needsGeocode(last: Looked | null, fix: Fix, now: number, wantAddress = true): boolean {
+  if (!wantAddress) return false;
   if (!last) return true;
   if (distanceMeters(last, fix) > 25) return true;
   return now - last.at > (last.address ? 10 * 60000 : 2 * 60000);

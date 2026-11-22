@@ -43,7 +43,7 @@ export default function Camera({ active, mode, onExitMode, onOpenJob, onOpenJobs
   const app = useApp();
   const data = useData();
   const [perm, requestPerm] = useCameraPermissions();
-  const loc = useLocation(active);
+  const loc = useLocation(active, data.stamp.show.address);
   const cam = useRef<CameraView>(null);
   const [ready, setReady] = useState(false);
   const [flash, setFlash] = useState<Flash>('off');
@@ -270,7 +270,7 @@ export default function Camera({ active, mode, onExitMode, onOpenJob, onOpenJobs
 
       <Sheet theme={theme} visible={locSheet} onClose={() => setLocSheet(false)} title="Location is off">
         <Text style={[type.body, { color: theme.ink }]}>Photos still save with the date and time. With location on, the stamp also prints the address and the coordinates of where you stood.</Text>
-        <Hint theme={theme} style={{ marginTop: space.s, marginBottom: space.l }}>Your location stays on this phone. It is only used while the camera is open.</Hint>
+        <Hint theme={theme} style={{ marginTop: space.s, marginBottom: space.l }}>It is only used while the camera is open. The street address is looked up by Apple’s location service, which receives the coordinates; turn the Address line off in Stamp and no lookup is made.</Hint>
         <GoButton
           theme={theme}
           label={loc.access === 'ask' ? 'Turn on location' : 'Open Settings'}
@@ -290,7 +290,7 @@ function NoCamera({ theme, canAsk, onAsk }: { theme: Theme; canAsk: boolean; onA
     <View style={styles.noCam}>
       <Glyph name="camera" size={44} color={theme.chromeSoft} />
       <Text style={[type.heading, { color: theme.chromeInk, textAlign: 'center', marginTop: space.m }]}>The camera is off for this app.</Text>
-      <Text style={[type.body, { color: theme.chromeSoft, textAlign: 'center', marginTop: space.s, marginBottom: space.xl }]}>It takes your job photos. Nothing leaves your phone.</Text>
+      <Text style={[type.body, { color: theme.chromeSoft, textAlign: 'center', marginTop: space.s, marginBottom: space.xl }]}>It takes your job photos. Photos stay on your phone until you share them.</Text>
       <GoButton theme={theme} label={canAsk ? 'Allow camera' : 'Open Settings'} onPress={() => (canAsk ? onAsk() : Linking.openSettings().catch(() => {}))} />
     </View>
   );

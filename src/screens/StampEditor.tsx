@@ -24,14 +24,14 @@ const CORNER_LABEL: Record<Corner, string> = { topLeft: 'Top left', topRight: 'T
 const LINES: { key: keyof StampShow; label: string; sub?: string; pro?: ProFeature }[] = [
   { key: 'date', label: 'Date' },
   { key: 'time', label: 'Time' },
-  { key: 'address', label: 'Address', sub: 'From your phone. With no signal, the coordinates print instead.' },
+  { key: 'address', label: 'Address', sub: 'Looked up by Apple’s location service, which receives the coordinates. Off: no lookup. No signal: the coordinates print instead.' },
   { key: 'coords', label: 'Latitude and longitude' },
   { key: 'altitude', label: 'Altitude', sub: 'Full template' },
   { key: 'job', label: 'Job name' },
   { key: 'note', label: 'Note' },
   { key: 'company', label: 'Company name', sub: 'Full template. Set it in Settings.', pro: 'company' },
   { key: 'logo', label: 'Logo', sub: 'Standard and Full. Add it in Settings.', pro: 'logo' },
-  { key: 'map', label: 'Map of the spot', sub: 'Full template. The map picture is loaded for that spot, like any map.', pro: 'map' },
+  { key: 'map', label: 'Map of the spot', sub: 'Full template. The map picture loads from Apple Maps for that spot.', pro: 'map' },
 ];
 
 export default function StampEditor({ onBack }: { onBack: () => void }) {
@@ -40,7 +40,7 @@ export default function StampEditor({ onBack }: { onBack: () => void }) {
   const app = useApp();
   const data = useData();
   const [s, setS] = useState<StampSettings>(data.stamp);
-  const loc = useLocation(true);
+  const loc = useLocation(true, s.show.address);
   const font = useStampFont();
   const [now, setNow] = useState(Date.now());
   useEffect(() => {

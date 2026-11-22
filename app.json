@@ -53,7 +53,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Your location is printed on each photo to show where it was taken. It stays on your phone.",
+          "locationWhenInUsePermission": "Your location is printed on each photo to show where it was taken.",
           "locationAlwaysAndWhenInUsePermission": false,
           "locationAlwaysPermission": false,
           "motionUsagePermission": false,

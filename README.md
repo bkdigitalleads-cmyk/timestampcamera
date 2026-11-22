@@ -1,6 +1,6 @@
 # Timestamp Camera
 
-The stamp camera for people who photograph work: the date, time, address and coordinates burned into every photo, photos filed by job, before and after pairs, a punch list, and a PDF photo report. No account, no server: photos, locations and reports stay on the phone.
+The stamp camera for people who photograph work: the date, time, address and coordinates burned into every photo, photos filed by job, before and after pairs, a punch list, and a PDF photo report. No account and no server of ours: photos and reports stay on the phone until shared. The address lookup and the optional map use Apple's services (see docs/privacy.html).
 
 - App: Expo SDK 57, React Native, TypeScript. `npm install`, then `npx tsc --noEmit` and `npm test`.
 - Website: `docs/` (GitHub Pages): landing page, privacy policy, support with an FAQ.

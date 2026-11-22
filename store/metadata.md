@@ -53,9 +53,9 @@ WORKS WITHOUT SIGNAL
 - No signal in the basement? The stamp prints the coordinates instead of the address. The shutter never waits.
 - Location off? The stamp shows the date and time.
 
-NOTHING LEAVES THE PHONE
-- No account, no server. Photos, locations and reports stay on your iPhone until you share them.
-- Location is used only while the app is open.
+YOUR PHOTOS STAY ON YOUR PHONE
+- No account and no server of ours. Photos and reports stay on your iPhone until you share them.
+- Location is used only while the app is open. The street address on the stamp is looked up by your iPhone's location service; turn the Address line off and no lookup is made.
 
 Built for contractors, handymen, cleaners, landscapers, inspectors, property managers and field crews who send proof of the work the same day.
 
@@ -81,7 +81,8 @@ First release. Date, time and place printed on every photo, photos filed by job,
 
 - Data collected: Purchases (Purchase History), through RevenueCat.
 - Not linked to the user's identity. Not used for tracking.
-- Nothing else: photos, locations, jobs, punch lists, signatures and reports never leave the device. Location is used on the device only, to print on the photo, and is not collected.
+- Nothing else is collected: we run no server and receive no photos, locations, jobs, punch lists, signatures or reports. Photos and reports stay on the device until the person shares them.
+- Not collected by us, but disclosed: the address on the stamp is looked up with Apple's location service (reverse geocoding), so the coordinates go to Apple for that lookup, only while the Address line is on. The optional map picture (Pro, off unless turned on) loads from Apple Maps. Both are Apple's own system services, covered by Apple's privacy policy, and the app's label stays Purchases only.
 
 ## In-app purchases (RevenueCat)
 
@@ -91,7 +92,7 @@ First release. Date, time and place printed on every photo, photos filed by job,
 
 ## App Review note
 
-Timestamp Camera is a camera for job photos. It prints the date, time and place on each photo, files photos by job, pairs before and after photos, keeps a punch list, and builds a PDF photo report. There is no account and no server; nothing is uploaded.
+Timestamp Camera is a camera for job photos. It prints the date, time and place on each photo, files photos by job, pairs before and after photos, keeps a punch list, and builds a PDF photo report. There is no account and no server of ours, and we collect nothing beyond the purchase record. Photos and reports stay on the iPhone until the person shares them. The street address on the stamp is looked up with Apple's location service (CLGeocoder through expo-location), so the coordinates go to Apple for that lookup, and only while the stamp's Address line is on; the optional map picture (Pro, off by default) loads from Apple Maps.
 
 Free: the camera, every stamp line, all templates, one job, saving copies to Photos, fixing a stamp, and the first photo report. Free photos carry no extra watermark.
 Pro (weekly with a 3-day free trial, yearly, lifetime): more jobs, company name and logo on the stamp, the map thumbnail, before and after pairs, punch lists, photo reports after the first, and importing existing photos.

@@ -138,6 +138,25 @@ test('no brand names in the app or the listing text', () => {
   assert.doesNotMatch(listing, /\bApple Maps\b|RevenueCat/);
 });
 
+test('privacy wording: photos stay on the phone, the Apple lookups are disclosed, and nothing claims more', () => {
+  assert.match(meta, /\nYOUR PHOTOS STAY ON YOUR PHONE\n- No account and no server of ours\. Photos and reports stay on your iPhone until you share them\.\n/);
+  assert.doesNotMatch(meta, /NOTHING LEAVES THE PHONE/);
+  // The privacy label stays Purchases only, and the review note says what goes to Apple.
+  assert.match(meta, /- Data collected: Purchases \(Purchase History\), through RevenueCat\./);
+  assert.match(meta, /the coordinates go to Apple for that lookup/);
+  assert.match(read('docs/support.html'), /Apple's location service, which receives the coordinates/);
+  assert.match(read('src/screens/StampEditor.tsx'), /Looked up by Apple’s location service, which receives the coordinates\. Off: no lookup\./);
+  // No claim that nothing leaves the phone, that nothing is uploaded, or that locations stay on it.
+  const claims = /nothing leaves|nothing is uploaded|never leaves? (?:the|this|your) (?:phone|device|iphone)|locations? (?:and [a-z]+ )?stays? on|locations?,[^.]*stay on|stays on (?:this|your) phone\.?"|It stays on your phone/i;
+  for (const f of [...userFacing, 'README.md', 'app.json', 'CLAUDE.md', 'NOTES.md'])
+    read(f)
+      .split('\n')
+      .forEach((line, i) => {
+        if (/Never write that|old wording|was not accurate/.test(line)) return; // the rule itself, and the log of the fix
+        assert.doesNotMatch(line, claims, `${f}:${i + 1}`);
+      });
+});
+
 // ---------- website ----------
 
 test('website: landing, privacy, support with an FAQ, sitemap and robots; the support address; nothing from Estimate Maker', () => {
@@ -147,6 +166,12 @@ test('website: landing, privacy, support with an FAQ, sitemap and robots; the su
   const privacy = read('docs/privacy.html');
   assert.match(privacy, /Purchases, not linked to you, not used for tracking/);
   assert.match(privacy, /only while the app is open, never in the background/);
+  // Said plainly: address lookup and the optional map use Apple's services, and Apple receives the coordinates.
+  assert.match(privacy, /<h2>What goes to Apple<\/h2>/);
+  assert.match(privacy, /Apple's location service to look up the coordinates/);
+  assert.match(privacy, /Apple receives those coordinates for that lookup/);
+  assert.match(privacy, /Turn the Address line off and no lookup is made/);
+  assert.match(privacy, /loads from Apple Maps, so Apple receives the area being shown/);
   assert.match(read('docs/support.html'), /class="faq"/);
   for (const f of ['index.html', 'privacy.html', 'support.html', 'sitemap.xml', 'robots.txt']) {
     const s = read(`docs/${f}`);

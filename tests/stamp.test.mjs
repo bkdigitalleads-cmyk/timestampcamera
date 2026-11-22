@@ -250,6 +250,10 @@ test('place: the geocoder is asked again only after moving or after a while; an 
   assert.equal(P.needsGeocode(looked, fix, 1000 + 11 * 60000), true);
   assert.equal(P.needsGeocode({ ...looked, address: null }, fix, 1000 + 3 * 60000), true, 'a failed ask is tried again sooner');
   assert.equal(P.addressFor(looked, fix), '1420 Elm St');
+  // With the Address line off, no lookup is ever made (the coordinates would go to Apple for it).
+  assert.equal(P.needsGeocode(null, fix, 1000, false), false);
+  assert.equal(P.needsGeocode({ ...looked, lat: 40 }, fix, 1000 + 60 * 60000, false), false);
+  assert.equal(P.needsGeocode(null, fix, 1000, true), true);
   assert.equal(P.addressFor(looked, { ...fix, lat: 41.8828 }), null, '110 m away: coordinates instead');
   assert.equal(P.addressFor(null, fix), null);
   assert.equal(P.addressFor(looked, null), null);

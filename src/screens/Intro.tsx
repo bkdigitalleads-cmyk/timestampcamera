@@ -160,7 +160,7 @@ export function Permissions({ onDone }: { onDone: () => void }) {
         theme={theme}
         glyph="camera"
         title="The camera takes your job photos."
-        line="It opens straight to the camera. Photos stay on this phone."
+        line="It opens straight to the camera. Photos stay on this phone until you share them."
         button="Allow camera"
         waiting={waiting}
         onPress={() => run(() => ExpoCamera.requestCameraPermissionsAsync(), () => setStep('location'))}
@@ -173,7 +173,7 @@ export function Permissions({ onDone }: { onDone: () => void }) {
         theme={theme}
         glyph="pin"
         title="Location prints where each photo was taken."
-        line="Only while the app is open, never in the background, and it stays on this phone. Without it, photos show the date and time."
+        line="Only while the app is open, never in the background. The street address is looked up by Apple’s location service, which receives the coordinates. Without location, photos show the date and time."
         button="Allow location"
         waiting={waiting}
         onPress={() => run(() => Location.requestForegroundPermissionsAsync(), () => setStep('photos'))}

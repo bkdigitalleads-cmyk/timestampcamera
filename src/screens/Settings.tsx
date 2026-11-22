@@ -150,7 +150,7 @@ export default function Settings({ onBack, onStamp, onReplayOnboarding }: { onBa
           <FieldLabel theme={theme}>About</FieldLabel>
           <Card theme={theme} style={styles.about}>
             <Text style={[type.body, { color: theme.ink }]}>Job photos with the date, time and place printed on them, filed by job.</Text>
-            <Text style={[type.small, { color: theme.inkSoft }]}>No account. Nothing is uploaded: your photos, locations and reports stay on this iPhone until you share them. The stamp prints your phone’s own clock and location.</Text>
+            <Text style={[type.small, { color: theme.inkSoft }]}>No account and no server of ours. Photos and reports stay on this iPhone until you share them. The street address on the stamp is looked up by Apple’s location service, which receives the coordinates; with the Address line off, no lookup is made. The stamp prints your phone’s own clock and location.</Text>
             <Text style={[type.small, { color: theme.inkFaint, paddingVertical: space.s }]} onPress={versionTap} accessibilityRole="text">
               Version {version}
             </Text>
