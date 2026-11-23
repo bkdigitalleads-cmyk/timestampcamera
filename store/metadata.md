@@ -6,7 +6,7 @@ Everything here is entered in App Store Connect by Brian and his Cowork session.
 
 - Name (28): Timestamp Camera: Job Photos
 - Subtitle (26): GPS Map Camera, Time Stamp
-- Keywords (100): date,photo,geotag,punch,list,site,report,proof,work,before,after,location,address,stamper,field,free
+- Keywords (99): date,photo,geotag,punch,list,site,report,proof,work,before,after,location,address,stamper,field,log
 - Home screen name: Timestamp Cam
 
 No keyword repeats a word of the name or subtitle, and there are no brand names.
@@ -108,6 +108,9 @@ Permissions, each asked with its reason on its own screen and each optional:
 How to test: open the app, take a photo (it goes to Job 1), tap the thumbnail at the bottom left to open the job, tap Build report and Share report. Tap the job chip at the top of the camera and New job to see the in-app paywall. Settings, Restore purchases works with a sandbox account.
 
 ## Screenshot plan (six, 6.9" and 6.5")
+
+Finished files in store/screenshots: 67-1.png to 67-6.png at 1320x2868 (6.9"), 61-1.png to 61-6.png at 1206x2622 (6.3"), and paywall-review.png at 1179x2556, the in-app paywall for the purchase review screenshot.
+
 
 1. The camera with the live stamp: "Date, time and place on every photo"
 2. A stamped photo, opened: "Printed into the photo, full size"

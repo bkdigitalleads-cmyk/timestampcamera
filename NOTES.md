@@ -2,6 +2,11 @@
 
 Newest first. One entry per commit: date, version/build, what changed and why, and how it was checked.
 
+- 2026-11-23: store assets only (branch claude/store-screenshots). No app code, version or build change.
+  - store/screenshots: the six App Store screenshots from the plan at 1320x2868 (67-1 to 67-6) and 1206x2622 (61-1 to 61-6), and paywall-review.png at 1179x2556 (the in-app paywall from Settings, three plans, the trial wording the app shows). Screens rendered at 3x (1179x2556) from a throwaway web copy of the real screens, then only scaled down onto the canvas; caption in Barlow Condensed with a yellow rule. The Miller kitchen sample job's photos are drawn scenes (backsplash before and after, subfloor, siding, sink base, deck), stamped by the app's own burn code at the large stamp size.
+  - store/metadata.md: the last English keyword is now `log` (was `free`; App Store Connect already has it), 99 characters; the screenshot plan names the files.
+  - Checked: `npm test` passing (the keyword, and a new check: every screenshot's pixel size and PNG color type 2, RGB with no alpha). Each image looked at whole and zoomed in.
+
 - 2026-11-23: 1.0.0 build 2, missing motion purpose string (branch claude/camera-1.0.0-build2).
   - Apple rejected build 1 at processing with ITMS-90683: Info.plist had no NSMotionUsageDescription although the binary references motion APIs. The source is expo-location 57.0.23: its iOS code links CoreMotion's CMMotionActivityManager (LocationModule.swift, MotionActivityStreamer.swift, MotionActivityPermissionRequester.swift), which needs the string even though the app never calls it. The key was missing because app.json set the expo-location plugin's `motionUsagePermission` to false, which deletes the key. expo-camera also imports CoreMotion, but only CMMotionManager (the accelerometer it reads to know how the phone is held for landscape photos), which needs no purpose string.
   - Fix: the expo-location plugin's `motionUsagePermission` and `ios.infoPlist.NSMotionUsageDescription` both say "Timestamp Camera uses motion to tell which way the phone is held, so photos are saved the right way up." No motion prompt ever appears: the app never requests motion activity.
