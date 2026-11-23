@@ -103,6 +103,7 @@ Permissions, each asked with its reason on its own screen and each optional:
 - Camera: to take the job photos.
 - Location, while using the app only (never in the background): to print where each photo was taken. With location denied, the app still works and the stamp shows the date and time only.
 - Add to Photos (add-only): asked only when the person turns on saving copies to Photos.
+- Motion (NSMotionUsageDescription): never asked for. The camera reads the phone's motion sensors to tell which way the phone is held, so a photo taken sideways is saved the right way up. The string is present because the location library links Apple's motion activity API (ITMS-90683 on build 1); the app never requests motion activity, so no motion prompt appears. Readings stay on the phone and are not stored.
 
 How to test: open the app, take a photo (it goes to Job 1), tap the thumbnail at the bottom left to open the job, tap Build report and Share report. Tap the job chip at the top of the camera and New job to see the in-app paywall. Settings, Restore purchases works with a sandbox account.
 

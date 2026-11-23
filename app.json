@@ -11,11 +11,12 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.bwk.timestampcamera",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "infoPlist": {
         "CFBundleDisplayName": "Timestamp Cam",
         "ITSAppUsesNonExemptEncryption": false,
-        "LSApplicationCategoryType": "public.app-category.photography"
+        "LSApplicationCategoryType": "public.app-category.photography",
+        "NSMotionUsageDescription": "Timestamp Camera uses motion to tell which way the phone is held, so photos are saved the right way up."
       }
     },
     "android": {
@@ -56,7 +57,7 @@
           "locationWhenInUsePermission": "Your location is printed on each photo to show where it was taken.",
           "locationAlwaysAndWhenInUsePermission": false,
           "locationAlwaysPermission": false,
-          "motionUsagePermission": false,
+          "motionUsagePermission": "Timestamp Camera uses motion to tell which way the phone is held, so photos are saved the right way up.",
           "isIosBackgroundLocationEnabled": false,
           "isAndroidBackgroundLocationEnabled": false
         }
