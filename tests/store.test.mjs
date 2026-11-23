@@ -32,7 +32,7 @@ test('identity: name, slug, bundle id, version, build, owner, home screen name',
   assert.equal(app.slug, 'timestampcamera');
   assert.equal(app.ios.bundleIdentifier, 'com.bwk.timestampcamera');
   assert.equal(app.version, '1.0.0');
-  assert.equal(app.ios.buildNumber, '1');
+  assert.equal(app.ios.buildNumber, '2');
   assert.equal(app.owner, 'bkdeveloper123');
   assert.equal(app.ios.infoPlist.CFBundleDisplayName, 'Timestamp Cam');
   assert.equal(app.ios.supportsTablet, false);
@@ -52,14 +52,24 @@ test('values from Cowork: the RevenueCat key, the App Store Connect id and the E
   assert.equal(eas.build.production.autoIncrement, false);
 });
 
-test('plugins: exactly three usage strings, location when in use only, push entitlement removed last', () => {
+test('plugins: exactly four usage strings (camera, location when in use, add to Photos, motion), no background location, push entitlement removed last', () => {
   const plugins = app.plugins.map((p) => (Array.isArray(p) ? p : [p, {}]));
   assert.equal(plugins[plugins.length - 1][0], './plugins/withoutPushEntitlement');
   const opt = (n) => plugins.find((p) => p[0] === n)?.[1];
   assert.match(opt('expo-camera').cameraPermission, /camera to take your job photos/);
   assert.equal(opt('expo-camera').microphonePermission, false);
   assert.match(opt('expo-location').locationWhenInUsePermission, /printed on each photo to show where it was taken/);
-  for (const k of ['locationAlwaysAndWhenInUsePermission', 'locationAlwaysPermission', 'motionUsagePermission', 'isIosBackgroundLocationEnabled']) assert.equal(opt('expo-location')[k], false, k);
+  for (const k of ['locationAlwaysAndWhenInUsePermission', 'locationAlwaysPermission', 'isIosBackgroundLocationEnabled']) assert.equal(opt('expo-location')[k], false, k);
+  // Build 1 was rejected at processing (ITMS-90683): expo-location links CMMotionActivityManager, which needs
+  // NSMotionUsageDescription. The plugin's option must carry the string (false deletes the key after infoPlist is applied).
+  const motion = 'Timestamp Camera uses motion to tell which way the phone is held, so photos are saved the right way up.';
+  assert.equal(opt('expo-location').motionUsagePermission, motion);
+  assert.equal(app.ios.infoPlist.NSMotionUsageDescription, motion);
+  // The only purpose strings in infoPlist are the motion one; the others come from the plugins above.
+  assert.deepEqual(Object.keys(app.ios.infoPlist).filter((k) => /UsageDescription$/.test(k)), ['NSMotionUsageDescription']);
+  // Strings the app does not need and must not carry: it never records audio, never reads the library itself, never tracks.
+  const all = JSON.stringify(app);
+  for (const k of ['NSMicrophoneUsageDescription', 'NSPhotoLibraryUsageDescription', 'NSUserTrackingUsageDescription', 'NSBluetoothAlwaysUsageDescription', 'NSContactsUsageDescription', 'NSCalendarsUsageDescription', 'NSLocationAlwaysAndWhenInUseUsageDescription']) assert.ok(!all.includes(k), k);
   assert.match(opt('expo-media-library').savePhotosPermission, /Saves copies/);
   assert.equal(opt('expo-media-library').photosPermission, false);
   assert.equal(opt('expo-image-picker').photosPermission, false);
