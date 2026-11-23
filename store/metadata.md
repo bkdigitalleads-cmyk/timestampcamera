@@ -19,6 +19,21 @@ No keyword repeats a word of the name or subtitle, and there are no brand names.
 
 The Spanish (Mexico) listing can use the English description below.
 
+## Extra listings indexed for US search
+
+Apple also reads these eight languages for searches in the US store; each holds its own English name, subtitle and keyword field, and the English description; phrases only form inside one listing.
+
+| Listing | Name | Subtitle | Keywords |
+| --- | --- | --- | --- |
+| Arabic | Date Stamp Camera: GPS Photo | Time Stamp, Location and Map | timestamp,stamper,geotag,job,site,work,report,inspection,before,after,punch,list,proof,geolocation |
+| French | Time Stamp Camera: Job Site | GPS Photo Location & Date Cam | timestamp,map,stamper,geotag,construction,contractor,daily,report,progress,project,log,field,survey |
+| Korean | Geotag Camera: GPS Photo Stamp | Date and Time Stamper, Map | timestamp,location,address,coordinates,latitude,longitude,altitude,elevation,caption,journal,note |
+| Portuguese (Brazil) | Location Camera: GPS Timestamp | Photo Date Stamp, Time & Map | geotag,stamper,inspection,report,property,rental,damage,insurance,claim,evidence,proof,home,tenant |
+| Russian | Work Photos: Timestamp Camera | Before and After Photo, GPS | date,time,stamp,map,location,compare,job,site,cleaning,landscaping,roofing,hvac,plumber,electrician |
+| Vietnamese | Field Report: Timestamp Camera | Inspection Photos, GPS & Date | time,stamp,location,map,punch,list,site,audit,survey,property,checklist,pdf,client,signature,job |
+| Chinese (Simplified) | Photo Stamper: Date & Time Cam | GPS Camera with Location Stamp | timestamp,map,geotag,proof,delivery,work,job,field,service,technician,driver,tracker,report,hvac |
+| Chinese (Traditional) | Punch List & Timestamp Camera | Site Photos, GPS Map and Date | time,stamp,location,snag,construction,contractor,builder,handyman,report,job,walkthrough,item,repair |
+
 ## Promotional text (170 max)
 
 Date, time and address printed on every job photo, filed by job. Before and after pairs, a punch list, and a photo report your client can read, sent in one tap.

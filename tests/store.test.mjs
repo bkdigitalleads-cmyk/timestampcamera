@@ -119,6 +119,26 @@ test('listing: names, subtitles and keywords fit, and no keyword repeats a word 
   assert.match(meta, /paywall appears .*close button \(X\) appears after 3 seconds/);
 });
 
+test('extra listings indexed for US search: eight, each name and subtitle 30 characters or fewer, each keyword field 100 bytes or fewer with no spaces', () => {
+  const sec = meta.slice(meta.indexOf('## Extra listings indexed for US search'));
+  const body = sec.slice(0, sec.indexOf('\n## ', 5) === -1 ? undefined : sec.indexOf('\n## ', 5));
+  const rows = body
+    .split('\n')
+    .filter((l) => l.startsWith('| ') && !l.startsWith('| Listing') && !l.startsWith('| ---'))
+    .map((l) => l.split('|').slice(1, -1).map((c) => c.trim()));
+  assert.deepEqual(
+    rows.map((r) => r[0]),
+    ['Arabic', 'French', 'Korean', 'Portuguese (Brazil)', 'Russian', 'Vietnamese', 'Chinese (Simplified)', 'Chinese (Traditional)']
+  );
+  for (const [listing, name, subtitle, keywords] of rows) {
+    assert.ok(name.length > 0 && name.length <= 30, `${listing} name is ${name.length} characters`);
+    assert.ok(subtitle.length > 0 && subtitle.length <= 30, `${listing} subtitle is ${subtitle.length} characters`);
+    assert.ok(Buffer.byteLength(keywords, 'utf8') <= 100, `${listing} keywords are ${Buffer.byteLength(keywords, 'utf8')} bytes`);
+    assert.ok(!/\s/.test(keywords), `${listing} keywords have a space`);
+    assert.ok(keywords.split(',').every((k) => k.length > 0), `${listing} keywords have an empty entry`);
+  }
+});
+
 // ---------- copy voice ----------
 
 const userFacing = [...walk('src', ['.ts', '.tsx']), 'App.tsx', 'index.ts', ...walk('docs', ['.html']), 'store/metadata.md'];

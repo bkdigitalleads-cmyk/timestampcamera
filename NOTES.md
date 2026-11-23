@@ -2,6 +2,10 @@
 
 Newest first. One entry per commit: date, version/build, what changed and why, and how it was checked.
 
+- 2026-11-23: store/metadata.md only (branch claude/store-extra-listings). Documentation, no app change.
+  - Recorded what is now in App Store Connect: a new section, Extra listings indexed for US search, with the eight extra listings Apple also reads for US searches (Arabic, French, Korean, Portuguese (Brazil), Russian, Vietnamese, Chinese (Simplified), Chinese (Traditional)), each with its own English name, subtitle and keyword field.
+  - Checked: `npm test` passing (new: all eight listings present; each name and subtitle 30 characters or fewer; each keyword field 100 bytes or fewer, with no spaces and no empty entries).
+
 - 2026-11-23: store assets only (branch claude/store-screenshots). No app code, version or build change.
   - store/screenshots: the six App Store screenshots from the plan at 1320x2868 (67-1 to 67-6) and 1206x2622 (61-1 to 61-6), and paywall-review.png at 1179x2556 (the in-app paywall from Settings, three plans, the trial wording the app shows). Screens rendered at 3x (1179x2556) from a throwaway web copy of the real screens, then only scaled down onto the canvas; caption in Barlow Condensed with a yellow rule. The Miller kitchen sample job's photos are drawn scenes (backsplash before and after, subfloor, siding, sink base, deck), stamped by the app's own burn code at the large stamp size.
   - store/metadata.md: the last English keyword is now `log` (was `free`; App Store Connect already has it), 99 characters; the screenshot plan names the files.
