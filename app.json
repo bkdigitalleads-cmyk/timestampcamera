@@ -1,0 +1,90 @@
+{
+  "expo": {
+    "name": "Timestamp Camera",
+    "slug": "timestampcamera",
+    "scheme": "timestampcamera",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#F3F4F1",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.bwk.timestampcamera",
+      "buildNumber": "1",
+      "infoPlist": {
+        "CFBundleDisplayName": "Timestamp Cam",
+        "ITSAppUsesNonExemptEncryption": false,
+        "LSApplicationCategoryType": "public.app-category.photography"
+      }
+    },
+    "android": {
+      "package": "com.bwk.timestampcamera",
+      "adaptiveIcon": {
+        "backgroundColor": "#15181B",
+        "foregroundImage": "./assets/android-icon-foreground.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-font",
+      "expo-sqlite",
+      "expo-localization",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 120,
+          "resizeMode": "contain",
+          "backgroundColor": "#15181B"
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Timestamp Camera uses the camera to take your job photos.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Your location is printed on each photo to show where it was taken.",
+          "locationAlwaysAndWhenInUsePermission": false,
+          "locationAlwaysPermission": false,
+          "motionUsagePermission": false,
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": false,
+          "savePhotosPermission": "Saves copies of your stamped photos to your Photos library when you turn on saving.",
+          "isAccessMediaLocationEnabled": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": false,
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ],
+      "./plugins/withoutPushEntitlement"
+    ],
+    "extra": {
+      "revenueCatApiKeyIos": "appl_zyeqOkNXLuDMkWoGHOnbyBtnibP",
+      "eas": {
+        "projectId": "ad880069-1f10-49d0-bcf5-b05c86bbe8e3"
+      }
+    },
+    "owner": "bkdeveloper123"
+  }
+}
