@@ -96,7 +96,7 @@ test('listing: names, subtitles and keywords fit, and no keyword repeats a word 
   assert.equal(sub.v.length, sub.n);
   assert.ok(name.n <= 30 && sub.n <= 30);
   const kw = field('Keywords');
-  assert.equal(kw.v, 'date,photo,geotag,punch,list,site,report,proof,work,before,after,location,address,stamper,field,free');
+  assert.equal(kw.v, 'date,photo,geotag,punch,list,site,report,proof,work,before,after,location,address,stamper,field,log');
   assert.equal(kw.v.length, kw.n);
   assert.ok(kw.v.length <= 100);
   const taken = new Set([...words(name.v), ...words(sub.v)]);
@@ -237,6 +237,19 @@ test('icon: A3 yellow at every size; assets/icon.png is 1024x1024 RGB with no al
   assert.equal(app.android.adaptiveIcon.backgroundColor, '#15181B');
   assert.match(read('docs/design/NOTES.md'), /Chosen: A3 yellow/);
   for (const f of ['index.html', 'privacy.html', 'support.html']) assert.match(read(`docs/${f}`), /app icon: a photo with a yellow tag/);
+});
+
+test('store screenshots: six at 1320x2868 and six at 1206x2622, the paywall at 1179x2556, all RGB PNG with no alpha', () => {
+  const info = (f) => {
+    const b = readFileSync(path.join(root, 'store/screenshots', f));
+    assert.equal(b.toString('latin1', 1, 4), 'PNG', f);
+    return { w: b.readUInt32BE(16), h: b.readUInt32BE(20), colorType: b[25] };
+  };
+  for (let i = 1; i <= 6; i++) {
+    assert.deepEqual(info(`67-${i}.png`), { w: 1320, h: 2868, colorType: 2 }, `67-${i}`);
+    assert.deepEqual(info(`61-${i}.png`), { w: 1206, h: 2622, colorType: 2 }, `61-${i}`);
+  }
+  assert.deepEqual(info('paywall-review.png'), { w: 1179, h: 2556, colorType: 2 });
 });
 
 test('design: ink on the yellow main button and on the light background is well above 4.5:1', () => {
