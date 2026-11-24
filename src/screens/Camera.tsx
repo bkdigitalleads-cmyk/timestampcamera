@@ -312,18 +312,32 @@ export default function Camera({ active, mode, onExitMode, onOpenJob, onOpenJobs
       <Sheet theme={theme} visible={picker} onClose={() => setPicker(false)} title="Jobs">
         <Card theme={theme} style={{ marginBottom: space.m }}>
           {data.jobs.map((j, i) => (
-            <Line
-              key={j.id}
-              theme={theme}
-              first={i === 0}
-              label={jobLabel(j)}
-              sub={[j.client, j.photoCount === 1 ? '1 photo' : `${j.photoCount} photos`].filter(Boolean).join(', ')}
-              onPress={() => {
-                data.setCurrentJob(j.id);
-                setPicker(false);
-              }}
-              right={j.id === job?.id ? <Glyph name="check" size={22} color={theme.ink} weight={2.4} /> : <View />}
-            />
+            <React.Fragment key={j.id}>
+              <Line
+                theme={theme}
+                first={i === 0}
+                label={jobLabel(j)}
+                sub={[j.client, j.photoCount === 1 ? '1 photo' : `${j.photoCount} photos`].filter(Boolean).join(', ')}
+                onPress={() => {
+                  data.setCurrentJob(j.id);
+                  setPicker(false);
+                }}
+                right={j.id === job?.id ? <Glyph name="check" size={22} color={theme.ink} weight={2.4} /> : <View />}
+              />
+              {/* The job the camera is on: a clear way into it (Brian did not find All jobs as the way to the punch list). */}
+              {j.id === job?.id ? (
+                <Line
+                  theme={theme}
+                  glyph="jobs"
+                  label={`Open ${jobLabel(j)}`}
+                  sub="Photos, before and after, punch list, report"
+                  onPress={() => {
+                    setPicker(false);
+                    onOpenJob(j.id);
+                  }}
+                />
+              ) : null}
+            </React.Fragment>
           ))}
           <Line theme={theme} first={data.jobs.length === 0} glyph="plus" label="New job" onPress={newJob} right={!canAddJob(pro, data.jobs.length) ? <Glyph name="lock" size={16} color={theme.inkFaint} /> : <View />} />
         </Card>

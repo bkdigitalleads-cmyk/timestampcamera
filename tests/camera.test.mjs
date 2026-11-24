@@ -121,3 +121,11 @@ test('Before is for the next photo only: the switch falls back to Photo once it 
   const sets = [...cam.matchAll(/setNextBefore\(([^)]*)\)/g)].map((x) => x[1]);
   assert.deepEqual(sets.sort(), ['!nextBefore', 'beforeRef.current', 'false'].sort());
 });
+
+test('Jobs sheet: the job the camera is on has an Open row right under it, straight to the job; All jobs stays', () => {
+  const cam = read('src/screens/Camera.tsx');
+  const sheet = cam.slice(cam.indexOf('visible={picker}'), cam.indexOf('<NewJobSheet'));
+  assert.match(sheet, /\{j\.id === job\?\.id \? \(\s*<Line\s+theme=\{theme\}\s+glyph="jobs"\s+label=\{`Open \$\{jobLabel\(j\)\}`\}\s+sub="Photos, before and after, punch list, report"/);
+  assert.match(sheet, /setPicker\(false\);\s*onOpenJob\(j\.id\);/);
+  assert.match(sheet, /label="All jobs" sub="Photos by day, before and after, punch lists, reports"/);
+});
