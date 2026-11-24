@@ -41,7 +41,24 @@ export interface StampLayout {
   align: 'left' | 'right';
 }
 
-/** Font size as a share of the photo's short side. */
+/**
+ * The length the stamp's size is a share of. For a camera photo (3:4) and a
+ * square it is the short side, so the stamp covers the same share of a 12 MP
+ * photo and of the preview. A long thin picture, such as a 9:19.5 screenshot
+ * imported from the library, is shown in a box closer to 3:4 in the photo
+ * screen, the grid and the report, which shrinks it; sized on its short side
+ * alone its stamp looked a third smaller than on camera photos (Brian's test
+ * of build 3). So the base is the larger of the short side and three quarters
+ * of the long side, never more than 1.6 times the short side, so the stamp
+ * still fits across a narrow picture and stays sane on a panorama.
+ */
+export function stampBase(width: number, height: number): number {
+  const short = Math.min(width, height);
+  const long = Math.max(width, height);
+  return Math.min(Math.max(short, long * 0.75), short * 1.6);
+}
+
+/** Font size as a share of the stamp base (stampBase). */
 export const SIZE_SHARE: Record<StampSize, number> = { small: 0.026, medium: 0.034, large: 0.045 };
 
 /** Barlow's ascent and descent as a share of the font size, for baselines. */
@@ -103,7 +120,7 @@ export function layoutStamp(opts: {
 }): StampLayout {
   const { width, height, corner, measure } = opts;
   const short = Math.min(width, height);
-  const fontSize = Math.max(6, short * SIZE_SHARE[opts.size]);
+  const fontSize = Math.max(6, stampBase(width, height) * SIZE_SHARE[opts.size]);
   const lineHeight = fontSize * LINE;
   const margin = short * 0.035;
   const gap = fontSize * 0.5;

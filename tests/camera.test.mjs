@@ -107,3 +107,17 @@ test('swipe: the photo screen goes through a job photos in the grid order', () =
   assert.match(job, /onPhoto=\{\(pid\) => onPhoto\(pid, photoOrder\(photos\)\)\}/);
   assert.match(read('src/screens/PhotoView.tsx'), /pagingEnabled/);
 });
+
+// ---------- build 4 ----------
+
+test('Before is for the next photo only: the switch falls back to Photo once it is used', () => {
+  assert.equal(S.beforeAfterPress(true, 'before'), false);
+  assert.equal(S.beforeAfterPress(true, null), true, 'a punch list photo (no Before there) leaves the switch as it was');
+  assert.equal(S.beforeAfterPress(false, null), false);
+  assert.equal(S.beforeAfterPress(false, 'after'), false);
+  const cam = read('src/screens/Camera.tsx');
+  assert.match(cam, /const role = photoRole\(m\.kind, beforeRef\.current, featureAllowed\(pro, 'pairs'\)\);\s*\/\/ [^\n]*\n\s*beforeRef\.current = beforeAfterPress\(beforeRef\.current, role\);\s*setNextBefore\(beforeRef\.current\);/, 'read and reset at the press, so two quick presses cannot both be Befores');
+  // Nothing else turns it on: only the Before chip sets it to true.
+  const sets = [...cam.matchAll(/setNextBefore\(([^)]*)\)/g)].map((x) => x[1]);
+  assert.deepEqual(sets.sort(), ['!nextBefore', 'beforeRef.current', 'false'].sort());
+});

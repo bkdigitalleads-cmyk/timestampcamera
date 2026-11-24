@@ -20,7 +20,7 @@ import type { Job, Photo, PunchItem } from '../model.ts';
 import { dateRange, dayKey, longDay, pairsOf, photosByDay, shortDate } from '../jobs.ts';
 import type { Pair } from '../jobs.ts';
 import { ordered, punchSummary } from '../punch.ts';
-import { formatTime, partsOf } from '../stamp/format.ts';
+import { formatCoords, formatTime, partsOf } from '../stamp/format.ts';
 import type { Clock } from '../stamp/format.ts';
 import { strokePath, strokesBounds } from '../stroke.ts';
 import type { Stroke } from '../stroke.ts';
@@ -130,6 +130,20 @@ export function contain(box: { x: number; y: number; w: number; h: number }, pw:
 }
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+/**
+ * The lines under a photo in the grid: its caption (or the stamp's note), then
+ * where it was taken as the stamp printed it, the address, or the coordinates
+ * when the stamp printed coordinates. A photo with no place gets no place line.
+ */
+export function captionBody(m: Measure, p: Pick<Photo, 'caption' | 'note' | 'address' | 'lat' | 'lng'>, width: number): string[] {
+  const text = (p.caption.trim() || p.note.trim()).trim();
+  const place = (p.address ?? '').trim() || (p.lat != null && p.lng != null ? formatCoords(p.lat, p.lng) : '');
+  const out: string[] = [];
+  if (text) out.push(fit(m, text, 'regular', 8.5, width));
+  if (place) out.push(fit(m, place, 'regular', 8.5, width));
+  return out;
+}
 
 /** What goes in: the chosen days, the pairs with both halves, and the grid without the paired photos. */
 export function reportContent(photos: Photo[], options: ReportOptions): { grid: Photo[]; pairs: Pair[] } {
@@ -257,9 +271,10 @@ export function layoutReport(m: Measure, input: ReportInput): Report {
         const boxH = Math.max(...boxes);
         const caps = row.map((p) => {
           // An imported photo's time is the file's own, already on its stamp (or absent): the caption says Imported instead.
-          const head = [p.imported ? 'Imported' : when(p.takenAt), p.role === 'before' ? 'Before' : p.role === 'after' ? 'After' : ''].filter(Boolean).join('  ·  ');
-          const body = (p.caption.trim() || p.note.trim() || p.address || '').trim();
-          return { head, body: body ? wrap(m, body, 'regular', 8.5, COL).slice(0, 2) : [] };
+          // No Before or After here: a photo in the grid is not in a pair in this report (pairs have their own section),
+          // and a Before with no After is simply a photo.
+          const head = p.imported ? 'Imported' : when(p.takenAt);
+          return { head, body: captionBody(m, p, COL) };
         });
         const capH = 14 + Math.max(...caps.map((c) => c.body.length)) * 11;
         ensure(boxH + capH + 12);

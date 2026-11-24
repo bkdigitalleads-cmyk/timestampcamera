@@ -133,7 +133,27 @@ export default function Job({ id, onBack, onPhoto, onTakeAfter, onShootItem, onR
       </View>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         {tab === 'photos' ? <PhotosTab theme={theme} photos={photos} onPhoto={(pid) => onPhoto(pid, photoOrder(photos))} onImport={importPhotos} importing={importing} pro={app.isPro} onCamera={() => { data.setCurrentJob(id); onCamera(); }} /> : null}
-        {tab === 'pairs' ? <PairsTab theme={theme} pairs={pairs} onPair={setPair} onTakeAfter={(b) => (featureAllowed(app.isPro, 'pairs') ? onTakeAfter(b) : app.askPro('pairs'))} pro={app.isPro} /> : null}
+        {tab === 'pairs' ? (
+          <PairsTab
+            theme={theme}
+            pairs={pairs}
+            onPair={setPair}
+            onTakeAfter={(b) => (featureAllowed(app.isPro, 'pairs') ? onTakeAfter(b) : app.askPro('pairs'))}
+            pro={app.isPro}
+            onClearUnpaired={(befores) =>
+              Alert.alert(`Take the Before mark off ${befores.length} photos?`, 'They stay in the job as photos. Befores that have an After keep their mark.', [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Take it off',
+                  onPress: async () => {
+                    for (const b of befores) await data.setRole(b.id, null);
+                    app.say(`${befores.length} photos are no longer Befores`);
+                  },
+                },
+              ])
+            }
+          />
+        ) : null}
         {tab === 'punch' ? (
           <PunchTab
             theme={theme}
@@ -226,7 +246,7 @@ function PhotosTab({ theme, photos, onPhoto, onImport, importing, pro, onCamera 
 
 // ---------- before and after ----------
 
-function PairsTab({ theme, pairs, onPair, onTakeAfter, pro }: { theme: Theme; pairs: Pair[]; onPair: (p: Pair) => void; onTakeAfter: (b: Photo) => void; pro: boolean }) {
+function PairsTab({ theme, pairs, onPair, onTakeAfter, pro, onClearUnpaired }: { theme: Theme; pairs: Pair[]; onPair: (p: Pair) => void; onTakeAfter: (b: Photo) => void; pro: boolean; onClearUnpaired: (befores: Photo[]) => void }) {
   const { width } = useWindowDimensions();
   const w = Math.floor((width - space.l * 2 - space.s) / 2);
   if (pairs.length === 0)
@@ -237,8 +257,16 @@ function PairsTab({ theme, pairs, onPair, onTakeAfter, pro }: { theme: Theme; pa
         {!pro ? <Hint theme={theme}>Before and after pairs are part of Pro.</Hint> : null}
       </Card>
     );
+  const unpaired = pairs.filter((p) => !p.after).map((p) => p.before);
   return (
     <View style={{ gap: space.l }}>
+      {unpaired.length >= 2 ? (
+        <Card theme={theme} style={{ padding: space.l, gap: space.s }}>
+          <Text style={[type.body, { color: theme.ink }]}>{unpaired.length} Befores have no After yet.</Text>
+          <PlainButton theme={theme} glyph="pair" label="Take the Before mark off these" onPress={() => onClearUnpaired(unpaired)} />
+          <Hint theme={theme}>They stay in the job as photos. Befores that have an After are not touched.</Hint>
+        </Card>
+      ) : null}
       {pairs.map((p) => (
         <View key={p.before.id} style={{ flexDirection: 'row', gap: space.s }}>
           <Press onPress={() => onPair(p)} style={{ width: w }} accessibilityRole="button" accessibilityLabel="Before photo">

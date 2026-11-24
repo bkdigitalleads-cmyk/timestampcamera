@@ -220,6 +220,28 @@ test('layout: the three sizes grow, and the preview is the photo scaled down', (
   assert.ok(Math.abs(small.box.x - big.box.x * k) < 0.5 && Math.abs(small.box.w - big.box.w * k) < 0.5, 'same place at preview scale');
 });
 
+test('layout: an imported screenshot gets a stamp as readable as a camera photo; 3:4 and square photos are unchanged', () => {
+  assert.equal(L.stampBase(3024, 4032), 3024, 'camera portrait: the short side, as before');
+  assert.equal(L.stampBase(4032, 3024), 3024);
+  assert.equal(L.stampBase(393, 524), 393, 'the live preview, as before');
+  assert.equal(L.stampBase(2000, 2000), 2000);
+  assert.ok(Math.abs(L.stampBase(1179, 2556) - 1179 * 1.6) < 0.01, 'a 9:19.5 screenshot: 1.6 times its width');
+  assert.equal(L.stampBase(8000, 2000), 3200, 'a panorama: capped at 1.6 times its height');
+  // Every line of a Full stamp still fits inside the screenshot, both ways up, and on a panorama.
+  const s = { ...base(), template: 'full', size: 'large', show: { ...base().show, altitude: true } };
+  const content = C.stampLines(s, ctx());
+  for (const [w, h] of [[1179, 2556], [2556, 1179], [8000, 2000]]) {
+    const lay = L.layoutStamp({ lines: content.lines, width: w, height: h, corner: 'bottomLeft', size: 'large', measure, logoAspect: 1, map: false });
+    assert.ok(inside(lay.box, w, h), `${w}x${h}`);
+    for (const l of lay.lines) assert.ok(l.x + l.width <= w, `${w}x${h}: ${l.text}`);
+  }
+  const shot = L.layoutStamp({ lines: content.lines, width: 1179, height: 2556, corner: 'bottomLeft', size: 'large', measure });
+  const cam = L.layoutStamp({ lines: content.lines, width: 3024, height: 4032, corner: 'bottomLeft', size: 'large', measure });
+  // Shown in the same 3:4 box, the screenshot's stamp is now at least as large as a camera photo's.
+  const shown = (lay, w, h) => lay.fontSize * Math.min(300 / w, 400 / h);
+  assert.ok(shown(shot, 1179, 2556) >= shown(cam, 3024, 4032) * 0.95, `${shown(shot, 1179, 2556)} vs ${shown(cam, 3024, 4032)}`);
+});
+
 test('layout: a long address wraps to two lines on Standard and is cut with an ellipsis on Compact', () => {
   const long = '1420 Westminster Boulevard North, Building C, Unit 14, Springfield Gardens, IL 62704';
   const narrow = { width: 1200, height: 1600 };

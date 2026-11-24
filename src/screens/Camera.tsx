@@ -22,7 +22,7 @@ import StampLayer, { useSkImage, useStampFont } from '../ui/StampLayer';
 import { stampLines } from '../stamp/content';
 import { turnFor, Turn } from '../stamp/turn';
 import { copyToPhotos, makePhoto } from '../capture';
-import { burnMayStart, canCapture, photoRole, READY_WAIT_MS } from '../camera/shutter';
+import { beforeAfterPress, burnMayStart, canCapture, photoRole, READY_WAIT_MS } from '../camera/shutter';
 import { readRel, uriOf } from '../store';
 import { canAddJob, featureAllowed } from '../gates';
 import type { Photo, PunchItem } from '../model';
@@ -49,6 +49,9 @@ export default function Camera({ active, mode, onExitMode, onOpenJob, onOpenJobs
   const [ready, setReady] = useState(false);
   const [flash, setFlash] = useState<Flash>('off');
   const [nextBefore, setNextBefore] = useState(false);
+  // Read by the press itself, so two quick presses cannot both take the one Before.
+  const beforeRef = useRef(false);
+  beforeRef.current = nextBefore;
   const [overlay, setOverlay] = useState(true);
   const [turn, setTurn] = useState<Turn>(0);
   const [saving, setSaving] = useState(0);
@@ -146,7 +149,10 @@ export default function Camera({ active, mode, onExitMode, onOpenJob, onOpenJobs
     const stamp = { settings: { ...settings }, ctx: { time: takenAt, place, jobName: '', company: data.company, pro, hasLogo: data.logo != null }, logo: data.logo, map: wantsMap ? map : null };
     const m = mode;
     const item = forItem;
-    const role = photoRole(m.kind, nextBefore, featureAllowed(pro, 'pairs'));
+    const role = photoRole(m.kind, beforeRef.current, featureAllowed(pro, 'pairs'));
+    // Before is for this one photo: the switch goes back to Photo at once.
+    beforeRef.current = beforeAfterPress(beforeRef.current, role);
+    setNextBefore(beforeRef.current);
     const pairId = m.kind === 'after' ? m.before.id : null;
     let target = m.kind === 'after' ? m.before.jobId : item ? item.jobId : job?.id ?? null;
     let label = jobName;
