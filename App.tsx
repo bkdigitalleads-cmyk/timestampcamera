@@ -23,7 +23,7 @@ import Intro, { Permissions, StampShow, TrialSteps } from './src/screens/Intro';
 import { GoButton, Sheet, Toast } from './src/ui/Site';
 
 /** A screen over the camera. Back pops one. */
-type Over = { name: 'jobs' } | { name: 'job'; id: string; tab?: JobTab } | { name: 'photo'; id: string } | { name: 'report'; jobId: string } | { name: 'stamp' } | { name: 'settings' };
+type Over = { name: 'jobs' } | { name: 'job'; id: string; tab?: JobTab } | { name: 'photo'; id: string; ids?: string[] } | { name: 'report'; jobId: string } | { name: 'stamp' } | { name: 'settings' };
 
 function Shell() {
   const theme = useTheme();
@@ -107,8 +107,8 @@ function Shell() {
   let over: React.ReactNode = null;
   if (top?.name === 'jobs') over = <Jobs onBack={pop} onOpen={(id) => push({ name: 'job', id })} />;
   else if (top?.name === 'job')
-    over = <Job key={top.id} id={top.id} tab={top.tab} onBack={pop} onPhoto={(id) => push({ name: 'photo', id })} onTakeAfter={takeAfter} onShootItem={(item) => toCamera({ kind: 'item', item })} onReport={(jobId) => push({ name: 'report', jobId })} onCamera={() => toCamera()} />;
-  else if (top?.name === 'photo') over = <PhotoView key={top.id} id={top.id} onBack={pop} onTakeAfter={takeAfter} onPhoto={(id) => push({ name: 'photo', id })} />;
+    over = <Job key={top.id} id={top.id} tab={top.tab} onBack={pop} onPhoto={(id, ids) => push({ name: 'photo', id, ids })} onTakeAfter={takeAfter} onShootItem={(item) => toCamera({ kind: 'item', item })} onReport={(jobId) => push({ name: 'report', jobId })} onCamera={() => toCamera()} />;
+  else if (top?.name === 'photo') over = <PhotoView key={top.id} id={top.id} ids={top.ids} onBack={pop} onTakeAfter={takeAfter} onPhoto={(id) => push({ name: 'photo', id })} />;
   else if (top?.name === 'report') over = <Report key={top.jobId} jobId={top.jobId} onBack={pop} />;
   else if (top?.name === 'stamp') over = <StampEditor onBack={pop} />;
   else if (top?.name === 'settings')
