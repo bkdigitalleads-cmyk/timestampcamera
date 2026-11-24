@@ -129,3 +129,13 @@ test('Jobs sheet: the job the camera is on has an Open row right under it, strai
   assert.match(sheet, /setPicker\(false\);\s*onOpenJob\(j\.id\);/);
   assert.match(sheet, /label="All jobs" sub="Photos by day, before and after, punch lists, reports"/);
 });
+
+test('Punch list tab: the photo step shows before any item exists; each row has a labelled Photo button; the keyboard closes after an add', () => {
+  const job = read('src/screens/Job.tsx');
+  assert.match(job, /Add what is left to do\. Each item gets a Photo button for a picture of the finished work\./);
+  const tab = job.slice(job.indexOf('function PunchTab'), job.indexOf('function ItemSheet'));
+  assert.match(tab, /<Press onPress=\{\(\) => onShoot\(it\)\}[^>]*accessibilityLabel=\{`Photo for \$\{it\.title\}`\}>\s*<Glyph name="camera"[^>]*\/>\s*<Text[^>]*>\s*Photo\s*<\/Text>/);
+  assert.match(job, /photoBtn: \{[^}]*minHeight: 44/);
+  assert.match(tab, /setTitle\(''\);\s*\/\/[^\n]*\n\s*Keyboard\.dismiss\(\);\s*onAdded\(\);/);
+  assert.match(job, /onAdded=\{\(\) => setTimeout\(\(\) => scroll\.current\?\.scrollToEnd\(\{ animated: true \}\), 250\)\}/);
+});

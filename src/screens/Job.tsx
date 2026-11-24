@@ -3,8 +3,8 @@
  * and Build report at the bottom. Pairs and punch lists are Pro to start;
  * anything already made stays readable and usable without it.
  */
-import React, { useCallback, useEffect, useState } from 'react';
-import { ActionSheetIOS, Alert, Image, Platform, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { ActionSheetIOS, Alert, Image, Keyboard, Platform, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme, radius, space, type, Theme } from '../theme';
@@ -40,6 +40,7 @@ export default function Job({ id, onBack, onPhoto, onTakeAfter, onShootItem, onR
   const [item, setItem] = useState<PunchItem | null>(null);
   const [pair, setPair] = useState<Pair | null>(null);
   const [importing, setImporting] = useState<string | null>(null);
+  const scroll = useRef<ScrollView>(null);
 
   const load = useCallback(async () => {
     setJob(await data.getJob(id));
@@ -131,7 +132,7 @@ export default function Job({ id, onBack, onPhoto, onTakeAfter, onShootItem, onR
         <Chip theme={theme} label={`Before and after ${pairs.length || ''}`.trim()} on={tab === 'pairs'} onPress={() => { tick(); setTab('pairs'); }} />
         <Chip theme={theme} label={`Punch list ${items.length || ''}`.trim()} on={tab === 'punch'} onPress={() => { tick(); setTab('punch'); }} />
       </View>
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+      <ScrollView ref={scroll} contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         {tab === 'photos' ? <PhotosTab theme={theme} photos={photos} onPhoto={(pid) => onPhoto(pid, photoOrder(photos))} onImport={importPhotos} importing={importing} pro={app.isPro} onCamera={() => { data.setCurrentJob(id); onCamera(); }} /> : null}
         {tab === 'pairs' ? (
           <PairsTab
@@ -160,6 +161,7 @@ export default function Job({ id, onBack, onPhoto, onTakeAfter, onShootItem, onR
             items={items}
             photos={photos}
             onAdd={addPunch}
+            onAdded={() => setTimeout(() => scroll.current?.scrollToEnd({ animated: true }), 250)}
             onToggle={async (it) => {
               savedHaptic();
               await data.saveItem(toggleItem(it, Date.now()));
@@ -335,12 +337,17 @@ function PairSheet({ theme, pair, onClose, jobName, onPhoto }: { theme: Theme; p
 
 // ---------- punch list ----------
 
-function PunchTab({ theme, items, photos, onAdd, onToggle, onOpen, onShoot, pro }: { theme: Theme; items: PunchItem[]; photos: Photo[]; onAdd: (title: string) => Promise<boolean>; onToggle: (i: PunchItem) => void; onOpen: (i: PunchItem) => void; onShoot: (i: PunchItem) => void; pro: boolean }) {
+function PunchTab({ theme, items, photos, onAdd, onAdded, onToggle, onOpen, onShoot, pro }: { theme: Theme; items: PunchItem[]; photos: Photo[]; onAdd: (title: string) => Promise<boolean>; onAdded: () => void; onToggle: (i: PunchItem) => void; onOpen: (i: PunchItem) => void; onShoot: (i: PunchItem) => void; pro: boolean }) {
   const [title, setTitle] = useState('');
   const counts = new Map<string, number>();
   for (const p of photos) if (p.itemId) counts.set(p.itemId, (counts.get(p.itemId) ?? 0) + 1);
   const submit = async () => {
-    if (await onAdd(title)) setTitle('');
+    if (await onAdd(title)) {
+      setTitle('');
+      // The keyboard goes away so it cannot cover the new row's Photo button, and the new row scrolls into view.
+      Keyboard.dismiss();
+      onAdded();
+    }
   };
   return (
     <View style={{ gap: space.l }}>
@@ -365,13 +372,18 @@ function PunchTab({ theme, items, photos, onAdd, onToggle, onOpen, onShoot, pro 
                   {it.note ? <Text style={[type.small, { color: theme.inkSoft }]} numberOfLines={2}>{it.note}</Text> : null}
                   {n ? <Text style={[type.small, { color: theme.inkFaint }]}>{n === 1 ? '1 photo' : `${n} photos`}</Text> : null}
                 </Press>
-                <IconButton theme={theme} glyph="camera" label={`Photo for ${it.title}`} onPress={() => onShoot(it)} />
+                <Press onPress={() => onShoot(it)} style={[styles.photoBtn, { borderColor: theme.ink }]} pressedStyle={{ backgroundColor: theme.well }} accessibilityRole="button" accessibilityLabel={`Photo for ${it.title}`}>
+                  <Glyph name="camera" size={20} color={theme.ink} />
+                  <Text style={[type.small, { color: theme.ink, fontWeight: '600' }]} maxFontSizeMultiplier={1.3}>
+                    Photo
+                  </Text>
+                </Press>
               </View>
             );
           })}
         </Card>
       ) : (
-        <Hint theme={theme}>Add what is left to do. Tick each item off as the work is done, and attach photos as proof.</Hint>
+        <Hint theme={theme}>Add what is left to do. Each item gets a Photo button for a picture of the finished work.</Hint>
       )}
     </View>
   );
@@ -499,7 +511,8 @@ const styles = StyleSheet.create({
   thumbTag: { position: 'absolute', left: 4, bottom: 4 },
   pairTag: { position: 'absolute', left: 6, top: 6 },
   takeAfter: { borderWidth: 1.5, borderStyle: 'dashed', borderRadius: radius.chip, alignItems: 'center', justifyContent: 'center', gap: space.xs },
-  punchRow: { flexDirection: 'row', alignItems: 'center', gap: space.m, paddingLeft: space.l, paddingRight: space.xs, minHeight: 60 },
+  punchRow: { flexDirection: 'row', alignItems: 'center', gap: space.m, paddingLeft: space.l, paddingRight: space.s, minHeight: 60 },
+  photoBtn: { flexDirection: 'row', alignItems: 'center', gap: space.xs, minHeight: 44, paddingHorizontal: space.s + 2, borderWidth: 1.5, borderRadius: 8 },
   check: { width: 32, height: 32, borderRadius: 7, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   addPhoto: { width: 72, height: 72, borderRadius: radius.chip, borderWidth: 1.5, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center' },
   bottom: { paddingHorizontal: space.l, paddingTop: space.m, borderTopWidth: StyleSheet.hairlineWidth },
