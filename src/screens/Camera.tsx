@@ -22,6 +22,7 @@ import StampLayer, { useSkImage, useStampFont } from '../ui/StampLayer';
 import { stampLines } from '../stamp/content';
 import { turnFor, Turn } from '../stamp/turn';
 import { copyToPhotos, makePhoto } from '../capture';
+import { burnMayStart, canCapture, photoRole, READY_WAIT_MS } from '../camera/shutter';
 import { readRel, uriOf } from '../store';
 import { canAddJob, featureAllowed } from '../gates';
 import type { Photo, PunchItem } from '../model';
@@ -57,6 +58,13 @@ export default function Camera({ active, mode, onExitMode, onOpenJob, onOpenJobs
   const [naming, setNaming] = useState(false);
   const [locSheet, setLocSheet] = useState(false);
   const queue = useRef<Promise<void>>(Promise.resolve());
+  // The shutter's own state, in refs so a queued press reads the latest values.
+  const readyRef = useRef(false);
+  const activeRef = useRef(active);
+  activeRef.current = active;
+  const capturing = useRef(0);
+  const lastPress = useRef(0);
+  const captures = useRef<Promise<void>>(Promise.resolve());
   const font = useStampFont();
 
   // The clock in the stamp moves every second while the camera shows.
@@ -67,6 +75,15 @@ export default function Camera({ active, mode, onExitMode, onOpenJob, onOpenJobs
   }, [active]);
 
   useEffect(() => app.setCameraOpen(active), [active, app]);
+
+  // Covered by another screen: the camera view is unmounted (its session stops), so it is not
+  // ready until a fresh view says so. See src/camera/shutter.ts for the build 2 crash.
+  useEffect(() => {
+    if (!active) {
+      readyRef.current = false;
+      setReady(false);
+    }
+  }, [active]);
 
   const job = data.currentJob;
   const forItem = mode.kind === 'item' ? mode.item : null;
@@ -92,46 +109,82 @@ export default function Camera({ active, mode, onExitMode, onOpenJob, onOpenJobs
   const previewW = width;
   const previewH = Math.round((width * 4) / 3);
 
+  const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+  /** Stamping and saving, one photo at a time, and only once the shutter has gone quiet (shutter.ts). */
   const enqueue = useCallback((work: () => Promise<void>) => {
     setSaving((n) => n + 1);
-    queue.current = queue.current.then(work).catch((e) => Alert.alert('The photo was not saved', e?.message ?? 'Try once more.')).finally(() => setSaving((n) => n - 1));
+    queue.current = queue.current
+      .then(async () => {
+        while (!burnMayStart({ now: Date.now(), lastPressAt: lastPress.current, capturing: capturing.current })) await sleep(200);
+        await work();
+      })
+      .catch((e) => Alert.alert('The photo was not saved', e?.message ?? 'Try once more.'))
+      .finally(() => setSaving((n) => n - 1));
   }, []);
 
-  const shoot = async () => {
-    if (!cam.current || !ready) return;
+  /** Waits for a ready camera (a press just after coming back to the camera), up to READY_WAIT_MS. */
+  const waitReady = async () => {
+    const until = Date.now() + READY_WAIT_MS;
+    while (!(canCapture({ permission: perm?.granted === true, active: activeRef.current, ready: readyRef.current }) && cam.current)) {
+      if (Date.now() > until) return false;
+      await sleep(100);
+    }
+    return true;
+  };
+
+  /**
+   * Every press: the haptic at once, the time and the place at that moment, then the capture
+   * queued behind any capture still in flight (expo-camera takes one picture at a time).
+   */
+  const shoot = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    // What the live stamp shows now is what prints.
     const takenAt = Date.now();
-    const place = loc.place;
+    lastPress.current = takenAt;
+    // What the live stamp shows now is what prints: the place is read at the press, and only a usable fix counts.
+    const place = loc.placeAt(takenAt);
     const stamp = { settings: { ...settings }, ctx: { time: takenAt, place, jobName: '', company: data.company, pro, hasLogo: data.logo != null }, logo: data.logo, map: wantsMap ? map : null };
-    let target = mode.kind === 'after' ? mode.before.jobId : forItem ? forItem.jobId : job?.id ?? null;
+    const m = mode;
+    const item = forItem;
+    const role = photoRole(m.kind, nextBefore, featureAllowed(pro, 'pairs'));
+    const pairId = m.kind === 'after' ? m.before.id : null;
+    let target = m.kind === 'after' ? m.before.jobId : item ? item.jobId : job?.id ?? null;
     let label = jobName;
-    let pic: { uri: string } | undefined;
-    try {
-      pic = await cam.current.takePictureAsync({ quality: 1, exif: false });
-    } catch (e: any) {
-      Alert.alert('The camera did not take the photo', e?.message ?? 'Try once more.');
-      return;
-    }
-    if (!pic?.uri) return;
-    if (!target) {
-      const j = await data.createJob();
-      target = j.id;
-      label = j.name;
-    }
-    stamp.ctx.jobName = label;
-    const role = mode.kind === 'after' ? 'after' : nextBefore && featureAllowed(pro, 'pairs') ? 'before' : null;
-    const pairId = mode.kind === 'after' ? mode.before.id : null;
-    const jobId = target;
-    const uri = pic.uri;
-    enqueue(async () => {
-      const p = await makePhoto({ uri, jobId, takenAt, place, note: settings.show.note ? settings.note.trim() : '', role, pairId, itemId: forItem?.id ?? null, imported: false, stamp });
-      await data.savePhoto(p);
-      let copied = true;
-      if (data.saveToPhotos) copied = await copyToPhotos(p.file);
-      app.say(`${role === 'after' ? 'After saved to' : role === 'before' ? 'Before saved to' : 'Saved to'} ${jobLabel({ name: label })}${copied ? '' : '. Photos did not take a copy.'}`);
+    capturing.current += 1;
+    captures.current = captures.current.then(async () => {
+      try {
+        if (!(await waitReady())) {
+          app.say('The camera was not ready. Take it again.');
+          return;
+        }
+        let pic: { uri: string } | undefined;
+        try {
+          pic = await cam.current!.takePictureAsync({ quality: 1, exif: false });
+        } catch (e: any) {
+          Alert.alert('The camera did not take the photo', e?.message ?? 'Try once more.');
+          return;
+        }
+        if (!pic?.uri) return;
+        if (!target) {
+          const j = await data.createJob();
+          target = j.id;
+          label = j.name;
+        }
+        stamp.ctx.jobName = label;
+        const jobId = target;
+        const uri = pic.uri;
+        enqueue(async () => {
+          const p = await makePhoto({ uri, jobId, takenAt, place, note: settings.show.note ? settings.note.trim() : '', role, pairId, itemId: item?.id ?? null, imported: false, stamp });
+          await data.savePhoto(p);
+          let copied = true;
+          if (data.saveToPhotos) copied = await copyToPhotos(p.file);
+          app.say(`${role === 'after' ? 'After saved to' : role === 'before' ? 'Before saved to' : 'Saved to'} ${jobLabel({ name: label })}${copied ? '' : '. Photos did not take a copy.'}`);
+        });
+        if (m.kind === 'after') onExitMode();
+      } finally {
+        capturing.current -= 1;
+      }
     });
-    if (mode.kind === 'after') onExitMode();
   };
 
   const newJob = () => {
@@ -164,6 +217,8 @@ export default function Camera({ active, mode, onExitMode, onOpenJob, onOpenJobs
       <View style={{ width: previewW, height: previewH, backgroundColor: '#000' }}>
         {permGranted ? (
           <>
+            {/* Mounted only while on screen: a fresh view fires onCameraReady after its session is running. */}
+            {active ? (
             <CameraView
               ref={cam}
               style={StyleSheet.absoluteFill}
@@ -174,9 +229,16 @@ export default function Camera({ active, mode, onExitMode, onOpenJob, onOpenJobs
               animateShutter
               responsiveOrientationWhenOrientationLocked
               onResponsiveOrientationChanged={(e) => setTurn(turnFor(e.orientation))}
-              onCameraReady={() => setReady(true)}
-              onMountError={() => setReady(false)}
+              onCameraReady={() => {
+                readyRef.current = true;
+                setReady(true);
+              }}
+              onMountError={() => {
+                readyRef.current = false;
+                setReady(false);
+              }}
             />
+            ) : null}
             {mode.kind === 'after' && overlay ? <Image source={{ uri: uriOf(mode.before.file) }} style={[StyleSheet.absoluteFill, { opacity: 0.38 }]} resizeMode="cover" accessibilityLabel="The Before, faint, to line up the shot" /> : null}
             <StampLayer width={previewW} height={previewH} content={content} settings={settings} logo={logoImg} map={mapImg} typeface={font} turn={turn} />
             {loc.access === 'denied' || loc.access === 'ask' ? (
@@ -230,7 +292,7 @@ export default function Camera({ active, mode, onExitMode, onOpenJob, onOpenJobs
         <Press onPress={() => job && onOpenJob(job.id)} disabled={!job} style={[styles.thumb, { borderColor: theme.chromeRaised }]} accessibilityRole="button" accessibilityLabel={job ? `Open ${jobLabel(job)}` : 'No photos yet'}>
           {job?.lastThumb ? <Image source={{ uri: uriOf(job.lastThumb) }} style={styles.thumbImg} /> : <Glyph name="photo" size={24} color={theme.chromeSoft} />}
         </Press>
-        <Press onPress={shoot} disabled={!permGranted || !ready} style={[styles.shutter, { borderColor: theme.accent, opacity: permGranted ? 1 : 0.35 }]} pressedStyle={{ transform: [{ scale: 0.94 }] }} accessibilityRole="button" accessibilityLabel="Take photo" accessibilityHint={`Saves to ${jobLabel({ name: jobName || 'Job 1' })}`}>
+        <Press onPress={shoot} disabled={!permGranted} style={[styles.shutter, { borderColor: theme.accent, opacity: permGranted ? (ready ? 1 : 0.7) : 0.35 }]} pressedStyle={{ transform: [{ scale: 0.94 }] }} accessibilityRole="button" accessibilityLabel="Take photo" accessibilityHint={`Saves to ${jobLabel({ name: jobName || 'Job 1' })}`}>
           <View style={[styles.shutterCore, { backgroundColor: theme.chromeInk }]} />
         </Press>
         <View style={{ alignItems: 'center', width: 64 }}>

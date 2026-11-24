@@ -55,6 +55,11 @@ export function photosByDay(photos: Photo[]): Day[] {
   return [...map.entries()].sort((a, b) => (a[0] < b[0] ? 1 : -1)).map(([key, list]) => ({ key, photos: list }));
 }
 
+/** The photos' ids in the order the job's Photos grid shows them: days newest first, each day in the order taken. The photo screen swipes through this order. */
+export function photoOrder(photos: Photo[]): string[] {
+  return photosByDay(photos).flatMap((d) => d.photos.map((p) => p.id));
+}
+
 /** "Nov 22, 2026", "Nov 18 to 22, 2026", "Nov 28 to Dec 3, 2026" or "Dec 30, 2026 to Jan 2, 2027". Null with no photos. */
 export function dateRange(photos: Pick<Photo, 'takenAt'>[]): string | null {
   if (photos.length === 0) return null;

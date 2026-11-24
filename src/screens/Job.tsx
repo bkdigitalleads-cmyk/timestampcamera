@@ -12,7 +12,7 @@ import { useApp } from '../state';
 import { useData } from '../data';
 import type { Job as JobT, Photo, PunchItem } from '../model';
 import { jobLabel, newId } from '../model';
-import { dayLabel, pairsOf, photoCount, photosByDay, Pair } from '../jobs';
+import { dayLabel, pairsOf, photoCount, photoOrder, photosByDay, Pair } from '../jobs';
 import { addItem, moveItem, ordered, punchSummary, toggleItem } from '../punch';
 import { canAddJob, featureAllowed } from '../gates';
 import { importedPlace, makePhoto } from '../capture';
@@ -27,7 +27,7 @@ import { savedHaptic, tick } from '../ui/motion';
 
 export type JobTab = 'photos' | 'pairs' | 'punch';
 
-export default function Job({ id, onBack, onPhoto, onTakeAfter, onShootItem, onReport, onCamera, tab: startTab = 'photos' }: { id: string; onBack: () => void; onPhoto: (id: string) => void; onTakeAfter: (before: Photo) => void; onShootItem: (item: PunchItem) => void; onReport: (jobId: string) => void; onCamera: () => void; tab?: JobTab }) {
+export default function Job({ id, onBack, onPhoto, onTakeAfter, onShootItem, onReport, onCamera, tab: startTab = 'photos' }: { id: string; onBack: () => void; onPhoto: (id: string, ids?: string[]) => void; onTakeAfter: (before: Photo) => void; onShootItem: (item: PunchItem) => void; onReport: (jobId: string) => void; onCamera: () => void; tab?: JobTab }) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const app = useApp();
@@ -132,7 +132,7 @@ export default function Job({ id, onBack, onPhoto, onTakeAfter, onShootItem, onR
         <Chip theme={theme} label={`Punch list ${items.length || ''}`.trim()} on={tab === 'punch'} onPress={() => { tick(); setTab('punch'); }} />
       </View>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        {tab === 'photos' ? <PhotosTab theme={theme} photos={photos} onPhoto={onPhoto} onImport={importPhotos} importing={importing} pro={app.isPro} onCamera={() => { data.setCurrentJob(id); onCamera(); }} /> : null}
+        {tab === 'photos' ? <PhotosTab theme={theme} photos={photos} onPhoto={(pid) => onPhoto(pid, photoOrder(photos))} onImport={importPhotos} importing={importing} pro={app.isPro} onCamera={() => { data.setCurrentJob(id); onCamera(); }} /> : null}
         {tab === 'pairs' ? <PairsTab theme={theme} pairs={pairs} onPair={setPair} onTakeAfter={(b) => (featureAllowed(app.isPro, 'pairs') ? onTakeAfter(b) : app.askPro('pairs'))} pro={app.isPro} /> : null}
         {tab === 'punch' ? (
           <PunchTab

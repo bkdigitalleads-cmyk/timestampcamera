@@ -3,9 +3,13 @@
  * Photos, mark it Before and take its After, write a caption for the
  * report, or fix the stamp: the stamp is burned again from the original,
  * which the app keeps, with the photo's own time and place.
+ *
+ * Opened from a job's Photos grid, it swipes left and right through that
+ * job's photos in the grid's order; each page keeps its own date, place and
+ * caption. Opened from a pair or a punch list item, it shows the one photo.
  */
 import React, { useEffect, useState } from 'react';
-import { Alert, Image, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Alert, FlatList, Image, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useTheme, space, Theme } from '../theme';
 import { useApp } from '../state';
 import { useData } from '../data';
@@ -23,7 +27,40 @@ import { savedHaptic } from '../ui/motion';
 
 const CORNER_LABEL: Record<Corner, string> = { topLeft: 'Top left', topRight: 'Top right', bottomLeft: 'Bottom left', bottomRight: 'Bottom right' };
 
-export default function PhotoView({ id, onBack, onTakeAfter, onPhoto }: { id: string; onBack: () => void; onTakeAfter: (before: Photo) => void; onPhoto: (id: string) => void }) {
+type Nav = { onBack: () => void; onTakeAfter: (before: Photo) => void; onPhoto: (id: string) => void };
+
+export default function PhotoView({ id, ids, ...nav }: Nav & { id: string; ids?: string[] }) {
+  const theme = useTheme();
+  const { width } = useWindowDimensions();
+  const list = ids && ids.includes(id) && ids.length > 1 ? ids : null;
+  const [index, setIndex] = useState(list ? list.indexOf(id) : 0);
+  if (!list) return <PhotoPage id={id} {...nav} />;
+  return (
+    <FlatList
+      style={{ flex: 1, backgroundColor: theme.bg }}
+      data={list}
+      keyExtractor={(x) => x}
+      horizontal
+      pagingEnabled
+      showsHorizontalScrollIndicator={false}
+      initialScrollIndex={index}
+      getItemLayout={(_, i) => ({ length: width, offset: width * i, index: i })}
+      windowSize={3}
+      initialNumToRender={1}
+      maxToRenderPerBatch={2}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
+      onMomentumScrollEnd={(e) => setIndex(Math.round(e.nativeEvent.contentOffset.x / width))}
+      renderItem={({ item, index: i }) => (
+        <View style={{ width, flex: 1 }}>
+          <PhotoPage id={item} position={`${i + 1} of ${list.length}`} {...nav} />
+        </View>
+      )}
+    />
+  );
+}
+
+function PhotoPage({ id, onBack, onTakeAfter, onPhoto, position }: Nav & { id: string; position?: string }) {
   const theme = useTheme();
   const { width } = useWindowDimensions();
   const app = useApp();
@@ -61,7 +98,7 @@ export default function PhotoView({ id, onBack, onTakeAfter, onPhoto }: { id: st
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
-      <Header theme={theme} title={jobLabel({ name: jobName })} sub={`${shortDate(p.takenAt)}${p.stamp?.noTime ? '' : `, ${formatTime(partsOf(p.takenAt), data.stamp.clock, false)}`}`} onBack={onBack} />
+      <Header theme={theme} title={jobLabel({ name: jobName })} sub={`${shortDate(p.takenAt)}${p.stamp?.noTime ? '' : `, ${formatTime(partsOf(p.takenAt), data.stamp.clock, false)}`}${position ? `, ${position}` : ''}`} onBack={onBack} />
       <ScrollView contentContainerStyle={{ paddingBottom: space.xxl * 2 }} keyboardShouldPersistTaps="handled">
         <Image key={stamp} source={{ uri: `${uriOf(original ? p.original : p.file)}?v=${stamp}` }} style={{ width, height: Math.min(h, width * 1.5), backgroundColor: '#000' }} resizeMode="contain" accessibilityLabel={original ? 'The original, without the stamp' : `Photo with stamp: ${p.stamp?.lines.join('. ') ?? ''}`} />
         <View style={styles.body}>
@@ -72,7 +109,7 @@ export default function PhotoView({ id, onBack, onTakeAfter, onPhoto }: { id: st
           </View>
           <Card theme={theme}>
             <Line theme={theme} first glyph="calendar" label={p.stamp?.noTime ? 'No date in the file' : `${longDay(p.takenAt)}, ${time}`} sub={p.imported ? 'From the imported file' : 'From this phone’s clock'} />
-            <Line theme={theme} glyph="pin" label={place ?? 'No location'} sub={p.address && p.lat != null && p.lng != null ? formatCoords(p.lat, p.lng) : place ? undefined : 'Location was off or had no fix'} />
+            <Line theme={theme} glyph="pin" label={place ?? 'No location'} sub={p.address && p.lat != null && p.lng != null ? formatCoords(p.lat, p.lng) : place ? undefined : 'Location was off, or the phone had no recent fix'} />
           </Card>
 
           <View>

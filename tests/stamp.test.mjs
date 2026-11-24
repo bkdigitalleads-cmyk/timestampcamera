@@ -258,8 +258,9 @@ test('place: the geocoder is asked again only after moving or after a while; an 
   assert.equal(P.addressFor(null, fix), null);
   assert.equal(P.addressFor(looked, null), null);
   assert.ok(Math.abs(P.distanceMeters({ lat: 0, lng: 0 }, { lat: 0, lng: 1 }) - 111195) < 5);
-  assert.equal(P.freshFix(fix, 1000 + 60000), fix);
-  assert.equal(P.freshFix(fix, 1000 + 3 * 60000), null, 'a stale fix is not printed');
+  const still = { ...fix, speed: 0 };
+  assert.equal(P.usableFix(still, 1000 + 20000), still, 'standing still, 20 seconds old: still where the phone is');
+  assert.equal(P.usableFix(still, 1000 + 3 * 60000), null, 'a stale fix is not printed');
   assert.equal(P.mapStillGood({ lat: 41.8818, lng: -87.6232 }, fix), true);
   assert.equal(P.mapStillGood(null, fix), false);
 });
