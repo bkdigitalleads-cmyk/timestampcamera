@@ -127,10 +127,12 @@ function PhotoPage({ id, onBack, onTakeAfter, onPhoto, position }: Nav & { id: s
               label="Save to Photos"
               onPress={async () => {
                 if (!(await askPhotosAccess())) return Alert.alert('Photos said no', 'Allow adding photos for Timestamp Camera in Settings, Privacy, Photos.');
-                if (await copyToPhotos(p.file)) {
+                const copy = await copyToPhotos(p.file);
+                if (copy === 'copied') {
                   savedHaptic();
                   app.say('Saved to Photos');
-                }
+                } else if (copy === 'no-access') Alert.alert('Photos said no', 'Allow adding photos for Timestamp Camera in Settings, Privacy, Photos.');
+                else Alert.alert('Photos did not take a copy', 'Try once more in a moment.');
               }}
             />
             <PlainButton theme={theme} grow glyph="eye" label={original ? 'Show stamped' : 'Show original'} onPress={() => setOriginal(!original)} />

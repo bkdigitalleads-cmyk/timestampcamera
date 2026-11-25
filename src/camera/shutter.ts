@@ -36,6 +36,16 @@ export function burnMayStart(s: { now: number; lastPressAt: number; capturing: n
 }
 
 /**
+ * Before is one reference shot, so it applies to the next photo only and the
+ * switch falls back to Photo the moment that photo is taken. (Build 3 kept
+ * it on: one tap on Before, or a brush of the chip just above the shutter,
+ * made every later photo a Before, in every job, until it was switched off.)
+ */
+export function beforeAfterPress(beforeOn: boolean, role: 'before' | 'after' | null): boolean {
+  return role === 'before' ? false : beforeOn;
+}
+
+/**
  * What a photo is: the role it gets from the camera's mode. The Before
  * switch is only on screen in photo mode, so a photo for a punch list item
  * never becomes a Before because the switch was left on earlier.

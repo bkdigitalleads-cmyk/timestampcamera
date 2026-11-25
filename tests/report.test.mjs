@@ -100,6 +100,19 @@ test('report content: chosen days only; pairs side by side and out of the grid; 
   assert.equal(noPhotos.pairs.length, 1);
 });
 
+test('report captions: the caption or note, then the place as the stamp printed it; no Before label in the grid', () => {
+  const coordsOnly = { caption: '', note: '', address: null, lat: 41.881832, lng: -87.623177 };
+  assert.deepEqual(RL.captionBody(measure, coordsOnly, 259), ['41.88183° N, 87.62318° W']);
+  assert.deepEqual(RL.captionBody(measure, { ...coordsOnly, address: '1420 Elm St, Springfield, IL 62704', note: 'Subfloor' }, 259), ['Subfloor', '1420 Elm St, Springfield, IL 62704']);
+  assert.deepEqual(RL.captionBody(measure, { ...coordsOnly, caption: 'Grout done', note: 'Backsplash' }, 259), ['Grout done', '41.88183° N, 87.62318° W']);
+  assert.deepEqual(RL.captionBody(measure, { caption: '', note: '', address: null, lat: null, lng: null }, 259), [], 'no place reported, no place line');
+  // A Before with no After is just a photo in the report.
+  const ps = [photo('b1', T0, { role: 'before', address: null, lat: 41.88, lng: -87.62 }), photo('n1', T0 + 60000)];
+  const texts = RL.layoutReport(measure, input({ photos: ps })).pages.flatMap((p) => p.ops.filter((o) => o.k === 'text').map((o) => o.text));
+  assert.ok(!texts.some((t) => /Before/.test(t)), 'no Before label for an unpaired Before');
+  assert.ok(texts.includes('41.88000° N, 87.62000° W'), 'the coordinates the stamp printed');
+});
+
 test('report punch list: every item with its status, done date and photo count; long titles wrap inside the page', () => {
   let items = [];
   for (const [i, t] of ['Fix door latch', 'Caulk the tub where it meets the tile on the long wall, both corners, clear silicone', 'Touch up paint in the hall'].entries()) items.push(PU.addItem(items, { id: `i${i}`, jobId: 'j', title: t, note: i === 1 ? 'Clear, not white' : '', now: T0 + i }));

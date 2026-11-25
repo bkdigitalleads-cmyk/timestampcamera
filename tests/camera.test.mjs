@@ -107,3 +107,94 @@ test('swipe: the photo screen goes through a job photos in the grid order', () =
   assert.match(job, /onPhoto=\{\(pid\) => onPhoto\(pid, photoOrder\(photos\)\)\}/);
   assert.match(read('src/screens/PhotoView.tsx'), /pagingEnabled/);
 });
+
+// ---------- build 4 ----------
+
+test('Before is for the next photo only: the switch falls back to Photo once it is used', () => {
+  assert.equal(S.beforeAfterPress(true, 'before'), false);
+  assert.equal(S.beforeAfterPress(true, null), true, 'a punch list photo (no Before there) leaves the switch as it was');
+  assert.equal(S.beforeAfterPress(false, null), false);
+  assert.equal(S.beforeAfterPress(false, 'after'), false);
+  const cam = read('src/screens/Camera.tsx');
+  assert.match(cam, /const role = photoRole\(m\.kind, beforeRef\.current, featureAllowed\(pro, 'pairs'\)\);\s*\/\/ [^\n]*\n\s*beforeRef\.current = beforeAfterPress\(beforeRef\.current, role\);\s*setNextBefore\(beforeRef\.current\);/, 'read and reset at the press, so two quick presses cannot both be Befores');
+  // Nothing else turns it on: only the Before chip sets it to true.
+  const sets = [...cam.matchAll(/setNextBefore\(([^)]*)\)/g)].map((x) => x[1]);
+  assert.deepEqual(sets.sort(), ['!nextBefore', 'beforeRef.current', 'false'].sort());
+});
+
+test('Jobs sheet: the job the camera is on has an Open row right under it, straight to the job; All jobs stays', () => {
+  const cam = read('src/screens/Camera.tsx');
+  const sheet = cam.slice(cam.indexOf('visible={picker}'), cam.indexOf('<NewJobSheet'));
+  assert.match(sheet, /\{j\.id === job\?\.id \? \(\s*<Line\s+theme=\{theme\}\s+glyph="jobs"\s+label=\{`Open \$\{jobLabel\(j\)\}`\}\s+sub="Photos, before and after, punch list, report"/);
+  assert.match(sheet, /setPicker\(false\);\s*onOpenJob\(j\.id\);/);
+  assert.match(sheet, /label="All jobs" sub="Photos by day, before and after, punch lists, reports"/);
+});
+
+test('Punch list tab: the photo step shows before any item exists; each row has a labelled Photo button; the keyboard closes after an add', () => {
+  const job = read('src/screens/Job.tsx');
+  assert.match(job, /Add what is left to do\. Each item gets a Photo button for a picture of the finished work\./);
+  const tab = job.slice(job.indexOf('function PunchTab'), job.indexOf('function ItemSheet'));
+  assert.match(tab, /<Press onPress=\{\(\) => onShoot\(it\)\}[^>]*accessibilityLabel=\{`Photo for \$\{it\.title\}`\}>\s*<Glyph name="camera"[^>]*\/>\s*<Text[^>]*>\s*Photo\s*<\/Text>/);
+  assert.match(job, /photoBtn: \{[^}]*minHeight: 44/);
+  assert.match(tab, /setTitle\(''\);\s*\/\/[^\n]*\n\s*Keyboard\.dismiss\(\);\s*onAdded\(\);/);
+  assert.match(job, /onAdded=\{\(\) => setTimeout\(\(\) => scroll\.current\?\.scrollToEnd\(\{ animated: true \}\), 250\)\}/);
+});
+
+// ---------- build 4: the copy to Photos (failed on every photo on build 3) ----------
+
+const C = await import('../src/camera/saved.ts');
+const { readdirSync, statSync } = await import('node:fs');
+
+test('no root import of a library function that throws: the build 3 copy to Photos failed this way every time', () => {
+  // expo-media-library 57 and expo-file-system keep their old functions at the package root
+  // only as stubs that throw ("This method will throw in runtime"); the real ones are under /legacy.
+  for (const pkg of ['expo-media-library', 'expo-file-system']) {
+    const stubs = [...read(`node_modules/${pkg}/build/legacyWarnings.d.ts`).matchAll(/export declare (?:async )?(?:function|const) (\w+)/g)].map((m) => m[1]);
+    assert.ok(stubs.length > 5, `${pkg}: stub list read`);
+    const files = [];
+    const walk = (d) => { for (const f of readdirSync(new URL(`../${d}`, import.meta.url))) { const p = `${d}/${f}`; statSync(new URL(`../${p}`, import.meta.url)).isDirectory() ? walk(p) : /\.tsx?$/.test(f) && files.push(p); } };
+    walk('src');
+    for (const f of [...files, 'App.tsx']) {
+      const src = read(f);
+      const root = src.match(new RegExp(`^import (\\{[^}]*\\}|[^;\\n{]+) from '${pkg}';`, 'm'));
+      if (!root) continue;
+      const ns = root[1].match(/\* as (\w+)/);
+      for (const name of stubs) {
+        assert.ok(!new RegExp(`\\b${name}\\b`).test(root[1]), `${f} imports ${name} from the ${pkg} root, which throws`);
+        if (ns) assert.ok(!src.includes(`${ns[1]}.${name}(`), `${f} calls ${ns[1]}.${name} from the ${pkg} root, which throws`);
+      }
+    }
+  }
+  const cap = read('src/capture.ts');
+  assert.match(cap, /import \* as MediaLibrary from 'expo-media-library\/legacy';/);
+  assert.match(cap, /save: \(\) => MediaLibrary\.saveToLibraryAsync\(uriOf\(rel\)\)/);
+  assert.match(cap, /getPermissionsAsync\(true\)/, 'add-only access is what is asked for and checked');
+});
+
+test('copy to Photos: a refused copy is tried once more, quietly, then reported', async () => {
+  const run = async (answers, allowed = true) => {
+    const log = [];
+    const r = await C.copyWithRetry({
+      allowed: async () => { if (allowed instanceof Error) throw allowed; return allowed; },
+      save: async () => { const a = answers.shift(); log.push('save'); if (a !== 'ok') throw new Error('no'); },
+      wait: async (ms) => { log.push(`wait ${ms}`); },
+    });
+    return [r, log];
+  };
+  assert.deepEqual(await run(['ok']), ['copied', ['save']]);
+  assert.deepEqual(await run(['no', 'ok']), ['copied', ['save', `wait ${C.COPY_RETRY_MS}`, 'save']], 'the retry is quiet: nothing is said if it works');
+  assert.deepEqual(await run(['no', 'no']), ['failed', ['save', `wait ${C.COPY_RETRY_MS}`, 'save']], 'one retry, not more');
+  assert.deepEqual(await run(['ok'], false), ['no-access', []], 'access off: no save is tried');
+  assert.deepEqual(await run(['ok'], new Error('unreadable')), ['copied', ['save']], 'an unreadable setting does not stop the save');
+});
+
+test('copy to Photos: the banner says what happened, and what to do when access is off', () => {
+  assert.equal(C.savedBanner(null, 'Job 2', null), 'Saved to Job 2');
+  assert.equal(C.savedBanner(null, 'Job 2', 'copied'), 'Saved to Job 2');
+  assert.equal(C.savedBanner('after', 'Job 2', 'copied'), 'After saved to Job 2');
+  assert.equal(C.savedBanner('before', 'Job 2', 'failed'), 'Before saved to Job 2. Photos did not take a copy.');
+  assert.equal(C.savedBanner(null, 'Job 2', 'no-access'), 'Saved to Job 2. Photos did not take a copy. To fix it: Settings, Privacy and Security, Photos, Timestamp Cam, Add Photos Only.');
+  const cam = read('src/screens/Camera.tsx');
+  assert.match(cam, /const copy = data\.saveToPhotos \? await copyToPhotos\(p\.file\) : null;\s*app\.say\(savedBanner\(role, jobLabel\(\{ name: label \}\), copy\)\);/, 'punch list, Before, After and plain photos all go through the same copy');
+  assert.match(read('src/state.tsx'), /Math\.min\(8000, Math\.max\(3200, text\.length \* 55\)\)/, 'the longer note stays up long enough to read');
+});

@@ -22,7 +22,8 @@ import StampLayer, { useSkImage, useStampFont } from '../ui/StampLayer';
 import { stampLines } from '../stamp/content';
 import { turnFor, Turn } from '../stamp/turn';
 import { copyToPhotos, makePhoto } from '../capture';
-import { burnMayStart, canCapture, photoRole, READY_WAIT_MS } from '../camera/shutter';
+import { savedBanner } from '../camera/saved';
+import { beforeAfterPress, burnMayStart, canCapture, photoRole, READY_WAIT_MS } from '../camera/shutter';
 import { readRel, uriOf } from '../store';
 import { canAddJob, featureAllowed } from '../gates';
 import type { Photo, PunchItem } from '../model';
@@ -49,6 +50,9 @@ export default function Camera({ active, mode, onExitMode, onOpenJob, onOpenJobs
   const [ready, setReady] = useState(false);
   const [flash, setFlash] = useState<Flash>('off');
   const [nextBefore, setNextBefore] = useState(false);
+  // Read by the press itself, so two quick presses cannot both take the one Before.
+  const beforeRef = useRef(false);
+  beforeRef.current = nextBefore;
   const [overlay, setOverlay] = useState(true);
   const [turn, setTurn] = useState<Turn>(0);
   const [saving, setSaving] = useState(0);
@@ -146,7 +150,10 @@ export default function Camera({ active, mode, onExitMode, onOpenJob, onOpenJobs
     const stamp = { settings: { ...settings }, ctx: { time: takenAt, place, jobName: '', company: data.company, pro, hasLogo: data.logo != null }, logo: data.logo, map: wantsMap ? map : null };
     const m = mode;
     const item = forItem;
-    const role = photoRole(m.kind, nextBefore, featureAllowed(pro, 'pairs'));
+    const role = photoRole(m.kind, beforeRef.current, featureAllowed(pro, 'pairs'));
+    // Before is for this one photo: the switch goes back to Photo at once.
+    beforeRef.current = beforeAfterPress(beforeRef.current, role);
+    setNextBefore(beforeRef.current);
     const pairId = m.kind === 'after' ? m.before.id : null;
     let target = m.kind === 'after' ? m.before.jobId : item ? item.jobId : job?.id ?? null;
     let label = jobName;
@@ -176,9 +183,8 @@ export default function Camera({ active, mode, onExitMode, onOpenJob, onOpenJobs
         enqueue(async () => {
           const p = await makePhoto({ uri, jobId, takenAt, place, note: settings.show.note ? settings.note.trim() : '', role, pairId, itemId: item?.id ?? null, imported: false, stamp });
           await data.savePhoto(p);
-          let copied = true;
-          if (data.saveToPhotos) copied = await copyToPhotos(p.file);
-          app.say(`${role === 'after' ? 'After saved to' : role === 'before' ? 'Before saved to' : 'Saved to'} ${jobLabel({ name: label })}${copied ? '' : '. Photos did not take a copy.'}`);
+          const copy = data.saveToPhotos ? await copyToPhotos(p.file) : null;
+          app.say(savedBanner(role, jobLabel({ name: label }), copy));
         });
         if (m.kind === 'after') onExitMode();
       } finally {
@@ -306,18 +312,32 @@ export default function Camera({ active, mode, onExitMode, onOpenJob, onOpenJobs
       <Sheet theme={theme} visible={picker} onClose={() => setPicker(false)} title="Jobs">
         <Card theme={theme} style={{ marginBottom: space.m }}>
           {data.jobs.map((j, i) => (
-            <Line
-              key={j.id}
-              theme={theme}
-              first={i === 0}
-              label={jobLabel(j)}
-              sub={[j.client, j.photoCount === 1 ? '1 photo' : `${j.photoCount} photos`].filter(Boolean).join(', ')}
-              onPress={() => {
-                data.setCurrentJob(j.id);
-                setPicker(false);
-              }}
-              right={j.id === job?.id ? <Glyph name="check" size={22} color={theme.ink} weight={2.4} /> : <View />}
-            />
+            <React.Fragment key={j.id}>
+              <Line
+                theme={theme}
+                first={i === 0}
+                label={jobLabel(j)}
+                sub={[j.client, j.photoCount === 1 ? '1 photo' : `${j.photoCount} photos`].filter(Boolean).join(', ')}
+                onPress={() => {
+                  data.setCurrentJob(j.id);
+                  setPicker(false);
+                }}
+                right={j.id === job?.id ? <Glyph name="check" size={22} color={theme.ink} weight={2.4} /> : <View />}
+              />
+              {/* The job the camera is on: a clear way into it (Brian did not find All jobs as the way to the punch list). */}
+              {j.id === job?.id ? (
+                <Line
+                  theme={theme}
+                  glyph="jobs"
+                  label={`Open ${jobLabel(j)}`}
+                  sub="Photos, before and after, punch list, report"
+                  onPress={() => {
+                    setPicker(false);
+                    onOpenJob(j.id);
+                  }}
+                />
+              ) : null}
+            </React.Fragment>
           ))}
           <Line theme={theme} first={data.jobs.length === 0} glyph="plus" label="New job" onPress={newJob} right={!canAddJob(pro, data.jobs.length) ? <Glyph name="lock" size={16} color={theme.inkFaint} /> : <View />} />
         </Card>
