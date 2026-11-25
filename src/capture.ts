@@ -8,7 +8,8 @@
  */
 import { Asset } from 'expo-asset';
 import { File } from 'expo-file-system';
-import * as MediaLibrary from 'expo-media-library';
+// The legacy API: in expo-media-library 57 the root export of saveToLibraryAsync throws on every call.
+import * as MediaLibrary from 'expo-media-library/legacy';
 import { Skia, SkTypeface } from '@shopify/react-native-skia';
 import { burnStamp, downscaleJpeg } from './stamp/burn';
 import { stampLines, StampContext, StampSettings, Place } from './stamp/content';
@@ -16,6 +17,7 @@ import type { MapPicture } from './camera/MapThumb';
 import type { Photo, PhotoStamp, Role } from './model';
 import { newId } from './model';
 import { readRel, readUri, uriOf, writeRel } from './store';
+import { copyWithRetry, CopyResult } from './camera/saved';
 import type { Logo } from './settings';
 
 let typeface: Promise<SkTypeface> | null = null;
@@ -72,16 +74,16 @@ async function burnAndWrite(original: Uint8Array, s: StampJob, paths: { file: st
 
 const pathsFor = (jobId: string, id: string) => ({ file: `photos/${jobId}/${id}.jpg`, original: `photos/${jobId}/${id}-original.jpg`, thumb: `photos/${jobId}/${id}-small.jpg` });
 
-/** Saves a copy of the stamped photo to Photos (add-only access). False when it could not. */
-export async function copyToPhotos(rel: string): Promise<boolean> {
-  try {
-    const perm = await MediaLibrary.getPermissionsAsync(true);
-    if (!perm.granted) return false;
-    await MediaLibrary.saveToLibraryAsync(uriOf(rel));
-    return true;
-  } catch {
-    return false;
-  }
+/**
+ * Saves a copy of the stamped photo to Photos (add-only access is enough).
+ * A refused copy is tried once more, quietly, before it is reported.
+ */
+export function copyToPhotos(rel: string): Promise<CopyResult> {
+  return copyWithRetry({
+    allowed: async () => (await MediaLibrary.getPermissionsAsync(true)).granted,
+    save: () => MediaLibrary.saveToLibraryAsync(uriOf(rel)),
+    wait: (ms) => new Promise((r) => setTimeout(r, ms)),
+  });
 }
 
 /** Asks for add-only access to Photos (only when the person turns saving on). */

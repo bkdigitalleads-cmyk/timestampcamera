@@ -51,7 +51,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const say = useCallback((text: string) => {
     if (noticeTimer.current) clearTimeout(noticeTimer.current);
     setNotice(text);
-    noticeTimer.current = setTimeout(() => setNotice(null), 3200);
+    // Longer notes (what to change in Settings) stay up long enough to read.
+    noticeTimer.current = setTimeout(() => setNotice(null), Math.min(8000, Math.max(3200, text.length * 55)));
   }, []);
 
   useEffect(() => {

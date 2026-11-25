@@ -22,6 +22,7 @@ import StampLayer, { useSkImage, useStampFont } from '../ui/StampLayer';
 import { stampLines } from '../stamp/content';
 import { turnFor, Turn } from '../stamp/turn';
 import { copyToPhotos, makePhoto } from '../capture';
+import { savedBanner } from '../camera/saved';
 import { beforeAfterPress, burnMayStart, canCapture, photoRole, READY_WAIT_MS } from '../camera/shutter';
 import { readRel, uriOf } from '../store';
 import { canAddJob, featureAllowed } from '../gates';
@@ -182,9 +183,8 @@ export default function Camera({ active, mode, onExitMode, onOpenJob, onOpenJobs
         enqueue(async () => {
           const p = await makePhoto({ uri, jobId, takenAt, place, note: settings.show.note ? settings.note.trim() : '', role, pairId, itemId: item?.id ?? null, imported: false, stamp });
           await data.savePhoto(p);
-          let copied = true;
-          if (data.saveToPhotos) copied = await copyToPhotos(p.file);
-          app.say(`${role === 'after' ? 'After saved to' : role === 'before' ? 'Before saved to' : 'Saved to'} ${jobLabel({ name: label })}${copied ? '' : '. Photos did not take a copy.'}`);
+          const copy = data.saveToPhotos ? await copyToPhotos(p.file) : null;
+          app.say(savedBanner(role, jobLabel({ name: label }), copy));
         });
         if (m.kind === 'after') onExitMode();
       } finally {
