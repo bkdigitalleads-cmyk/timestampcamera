@@ -32,7 +32,7 @@ test('identity: name, slug, bundle id, version, build, owner, home screen name',
   assert.equal(app.slug, 'timestampcamera');
   assert.equal(app.ios.bundleIdentifier, 'com.bwk.timestampcamera');
   assert.equal(app.version, '1.0.0');
-  assert.equal(app.ios.buildNumber, '4');
+  assert.equal(app.ios.buildNumber, '5');
   assert.equal(app.owner, 'bkdeveloper123');
   assert.equal(app.ios.infoPlist.CFBundleDisplayName, 'Timestamp Cam');
   assert.equal(app.ios.supportsTablet, false);

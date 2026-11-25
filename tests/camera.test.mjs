@@ -198,3 +198,31 @@ test('copy to Photos: the banner says what happened, and what to do when access 
   assert.match(cam, /const copy = data\.saveToPhotos \? await copyToPhotos\(p\.file\) : null;\s*app\.say\(savedBanner\(role, jobLabel\(\{ name: label \}\), copy\)\);/, 'punch list, Before, After and plain photos all go through the same copy');
   assert.match(read('src/state.tsx'), /Math\.min\(8000, Math\.max\(3200, text\.length \* 55\)\)/, 'the longer note stays up long enough to read');
 });
+
+// ---------- build 5: leaving a punch list or After mode ----------
+
+const M = await import('../src/camera/modeBar.ts');
+
+test('mode banner: a labelled way out, Done for item photos and Cancel for the After, at a full-size target', () => {
+  assert.equal(M.modeEndLabel('item'), 'Done');
+  assert.equal(M.modeEndLabel('after'), 'Cancel');
+  assert.equal(M.modeEndLabel('photo'), null);
+  const cam = read('src/screens/Camera.tsx');
+  const banner = cam.slice(cam.indexOf('styles.banner'), cam.indexOf('{/* Shutter row. */}'));
+  assert.doesNotMatch(banner, /glyph="close"/, 'no bare X');
+  assert.match(banner, /<Press onPress=\{onExitMode\} style=\{\[styles\.modeEnd[^>]*accessibilityRole="button"[^>]*>\s*<Text[^>]*>\s*\{modeEndLabel\(mode\.kind\)\}/);
+  assert.match(cam, /modeEnd: \{ minHeight: 44, minWidth: 76,/);
+});
+
+test('job bar: in a mode a tap says how to finish; it never leaves the mode by itself', () => {
+  assert.equal(M.lockedJobBarLine('photo'), null, 'plain photos: the bar opens the Jobs sheet');
+  assert.equal(M.lockedJobBarLine('item', 'Fix floorboard'), 'Photos now go on "Fix floorboard". Tap Done to pick a job.');
+  assert.equal(M.lockedJobBarLine('item', ''), 'Photos now go on this punch list item. Tap Done to pick a job.');
+  assert.equal(M.lockedJobBarLine('after'), 'The next photo is the After for that Before. Tap Cancel to pick a job.');
+  const cam = read('src/screens/Camera.tsx');
+  const bar = cam.slice(cam.indexOf('{/* In a mode the bar'), cam.indexOf('styles.jobChip'));
+  assert.match(bar, /const line = lockedJobBarLine\(mode\.kind, forItem\?\.title\);\s*if \(!line\) return setPicker\(true\);\s*tick\(\);\s*app\.say\(line\);/);
+  assert.doesNotMatch(bar, /onExitMode/, 'a tap by mistake must not send the next photos to the job instead of the item');
+  // A photo keeps the mode it was pressed in, so Done or Cancel during a save cannot move it.
+  assert.match(cam, /const m = mode;\s*const item = forItem;/);
+});
