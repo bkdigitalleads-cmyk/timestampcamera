@@ -23,6 +23,7 @@ import { stampLines } from '../stamp/content';
 import { turnFor, Turn } from '../stamp/turn';
 import { copyToPhotos, makePhoto } from '../capture';
 import { savedBanner } from '../camera/saved';
+import { lockedJobBarLine, modeEndLabel } from '../camera/modeBar';
 import { beforeAfterPress, burnMayStart, canCapture, photoRole, READY_WAIT_MS } from '../camera/shutter';
 import { readRel, uriOf } from '../store';
 import { canAddJob, featureAllowed } from '../gates';
@@ -210,7 +211,19 @@ export default function Camera({ active, mode, onExitMode, onOpenJob, onOpenJobs
       {/* Top bar: settings, the job chip, flash. */}
       <View style={styles.top}>
         <IconButton theme={theme} dark glyph="settings" label="Settings" onPress={onSettings} />
-        <Press onPress={() => (mode.kind === 'photo' ? setPicker(true) : null)} style={[styles.jobChip, { backgroundColor: theme.chromeRaised }]} accessibilityRole="button" accessibilityLabel={`Job: ${jobLabel({ name: jobName || 'Job 1' })}`} accessibilityHint="Switch jobs or add one">
+        {/* In a mode the bar is fixed to that job; a tap says how to finish rather than doing nothing (build 4). */}
+        <Press
+          onPress={() => {
+            const line = lockedJobBarLine(mode.kind, forItem?.title);
+            if (!line) return setPicker(true);
+            tick();
+            app.say(line);
+          }}
+          style={[styles.jobChip, { backgroundColor: theme.chromeRaised }]}
+          accessibilityRole="button"
+          accessibilityLabel={`Job: ${jobLabel({ name: jobName || 'Job 1' })}`}
+          accessibilityHint={mode.kind === 'photo' ? 'Switch jobs or add one' : `Tap ${modeEndLabel(mode.kind)} below to pick a job`}
+        >
           <Text style={[type.strong, { color: theme.chromeInk, flexShrink: 1 }]} numberOfLines={1}>
             Job: {jobName || (data.jobs.length ? 'Untitled job' : 'Job 1')}
           </Text>
@@ -288,7 +301,12 @@ export default function Camera({ active, mode, onExitMode, onOpenJob, onOpenJobs
               {mode.kind === 'after' ? `After for the Before from ${shortDate(mode.before.takenAt)}, ${formatTime(partsOf(mode.before.takenAt), settings.clock, false)}` : `Photo for: ${mode.item.title}`}
             </Text>
             {mode.kind === 'after' ? <IconButton theme={theme} dark size={40} glyph="eye" label={overlay ? 'Hide the Before' : 'Show the Before'} onPress={() => setOverlay(!overlay)} color={overlay ? theme.accent : theme.chromeSoft} /> : null}
-            <IconButton theme={theme} dark size={40} glyph="close" label="Stop" onPress={onExitMode} />
+            {/* A labelled way out at a full-size target (build 4: a bare X was not found). */}
+            <Press onPress={onExitMode} style={[styles.modeEnd, { backgroundColor: theme.accent }]} pressedStyle={{ opacity: 0.7 }} accessibilityRole="button" accessibilityLabel={modeEndLabel(mode.kind) ?? 'Done'} accessibilityHint="Back to plain photos and the job bar">
+              <Text style={[type.strong, { color: theme.onAccent }]} maxFontSizeMultiplier={1.3} numberOfLines={1}>
+                {modeEndLabel(mode.kind)}
+              </Text>
+            </Press>
           </View>
         )}
       </View>
@@ -410,6 +428,7 @@ const styles = StyleSheet.create({
   savingPill: { position: 'absolute', top: space.m, right: space.m, borderRadius: radius.round, paddingHorizontal: space.m, minHeight: 34, justifyContent: 'center' },
   modeRow: { flexDirection: 'row', justifyContent: 'center', gap: space.s, paddingHorizontal: space.l, paddingTop: space.m, minHeight: 60 },
   banner: { flex: 1, flexDirection: 'row', alignItems: 'center', borderRadius: radius.card, paddingLeft: space.m, gap: space.xs, minHeight: 48 },
+  modeEnd: { minHeight: 44, minWidth: 76, paddingHorizontal: space.l, marginRight: space.xs, borderRadius: radius.round, alignItems: 'center', justifyContent: 'center' },
   controls: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.xl },
   thumb: { width: 60, height: 60, borderRadius: radius.chip, borderWidth: 2, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   thumbImg: { width: '100%', height: '100%' },
